@@ -2,6 +2,7 @@
 data/*.sqlite
 data/olist/
 data/bird/
+data/mini-interact/
 
 # python
 .venv/

@@ -1,0 +1,16 @@
+# B0 baseline: plain model, full schema in the prompt, no tools.
+# Identical to h1.yaml except run_name (which selects the baseline agent).
+model: qwen3.8-27b
+base_url: http://localhost:8080/v1
+api_key: ${ANALYST_API_KEY}
+run_name: b0
+max_steps: 12
+max_total_tokens: 20000
+context_window: 32000
+db_path: data/olist.sqlite
+scratch_path: data/scratch.sqlite
+row_limit: 200
+timeout_s: 10
+rag: false
+sql_checks: false
+clarify: false

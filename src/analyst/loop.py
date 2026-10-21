@@ -47,6 +47,10 @@ class AgentResult:
     completion_tokens: int
     clarifications: int
     stop_reason: str  # answered | max_steps | token_budget | model_unavailable | context_overflow
+    sql_runs: int = 0
+    sql_errors: int = 0
+    write_sql: str | None = None
+    write_rows: int | None = None
 
 
 class Agent:
@@ -58,6 +62,7 @@ class Agent:
         tracer: Tracer,
         ask_user: Callable[[str], str],
         approve: Callable[[str], bool],
+        system_prompt: str | None = None,
     ):
         self._cfg = cfg
         self._llm = llm
@@ -65,9 +70,12 @@ class Agent:
         self._tracer = tracer
         self._ask_user = ask_user
         self._approve = approve
+        self._system_override = system_prompt
         tools.ask_user = ask_user
 
     def _system_prompt(self) -> str:
+        if self._system_override is not None:
+            return self._system_override
         return SYSTEM_PROMPT + (CLARIFY_RULE if self._cfg.clarify else "")
 
     @staticmethod
@@ -85,6 +93,10 @@ class Agent:
         prompt_tokens = 0
         completion_tokens = 0
         clarifications = 0
+        sql_runs = 0
+        sql_errors = 0
+        write_sql: str | None = None
+        write_rows: int | None = None
         last_sql: str | None = None
 
         def finish(answer: str, stop_reason: str) -> AgentResult:
@@ -96,6 +108,10 @@ class Agent:
                 completion_tokens=completion_tokens,
                 clarifications=clarifications,
                 stop_reason=stop_reason,
+                sql_runs=sql_runs,
+                sql_errors=sql_errors,
+                write_sql=write_sql,
+                write_rows=write_rows,
             )
 
         with self._tracer.run("agent run", input=question):
@@ -151,14 +167,20 @@ class Agent:
                     result = self._execute_tool_call(tc.name, tc.raw_arguments)
                     if tc.name == "ask_user" and result.ok:
                         clarifications += 1
-                    if tc.name == "run_sql" and result.ok:
-                        last_sql = json.loads(tc.raw_arguments).get("sql")
+                    if tc.name == "run_sql":
+                        sql_runs += 1
+                        if result.ok:
+                            last_sql = json.loads(tc.raw_arguments).get("sql")
+                        else:
+                            sql_errors += 1
                     if result.needs_approval:
                         approved = self._approve(result.pending_sql or "")
                         if approved:
+                            write_sql = result.pending_sql
                             result = self._tools.run_approved_write(
                                 result.pending_sql
                             )
+                            write_rows = result.rows
                         else:
                             result = ToolResult(
                                 "The user rejected the write; it was not "

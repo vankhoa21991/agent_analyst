@@ -1,0 +1,18 @@
+[
+ {
+  "question_id": 1,
+  "db_id": "testdb",
+  "question": "How many dogs are there?",
+  "evidence": "dogs are rows where species = 'dog'.",
+  "SQL": "SELECT COUNT(*) FROM pets WHERE species = 'dog'",
+  "difficulty": "simple"
+ },
+ {
+  "question_id": 2,
+  "db_id": "testdb",
+  "question": "List all pet names.",
+  "evidence": "",
+  "SQL": "SELECT name FROM pets",
+  "difficulty": "simple"
+ }
+]

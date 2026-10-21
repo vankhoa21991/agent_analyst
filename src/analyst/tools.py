@@ -19,6 +19,7 @@ class ToolResult:
     needs_approval: bool = False
     pending_sql: str | None = None
     ok: bool = True
+    rows: int | None = None
 
 
 def _cell(v) -> str:
@@ -174,7 +175,8 @@ class ToolRegistry:
         try:
             n = self._db.execute_write(sql)
             return ToolResult(
-                f"Write executed on the scratch database: {n} row(s) changed."
+                f"Write executed on the scratch database: {n} row(s) changed.",
+                rows=n,
             )
         except QueryError as e:
             return ToolResult(f"Write failed: {e}", ok=False)

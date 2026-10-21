@@ -6,7 +6,7 @@ import os
 from contextlib import contextmanager
 from pathlib import Path
 
-from .config import _load_dotenv
+from .config import _find_dotenv, _load_dotenv
 
 
 class Tracer:
@@ -16,11 +16,14 @@ class Tracer:
         metadata: dict | None = None,
         dotenv_path: str | os.PathLike | None = None,
     ):
-        _load_dotenv(Path(dotenv_path) if dotenv_path else Path.cwd())
+        env_file = _find_dotenv(Path(dotenv_path) if dotenv_path else Path.cwd())
+        if env_file is not None:
+            _load_dotenv(env_file)
         public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
         secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
+        enabled = os.environ.get("LANGFUSE_ENABLED", "1").strip().lower()
         self._lf = None
-        if public_key and secret_key:
+        if (public_key and secret_key) and enabled not in ("0", "false", "no"):
             from langfuse import Langfuse
 
             self._lf = Langfuse(

@@ -12,11 +12,17 @@ import yaml
 _ENV_VAR = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 
-def _load_dotenv(root: Path) -> None:
-    """Load KEY=VALUE lines from root/.env into os.environ (no override)."""
-    env_file = root / ".env"
-    if not env_file.is_file():
-        return
+def _find_dotenv(start: Path) -> Path | None:
+    """Walk up from start until a .env file is found (configs/ subdirs etc.)."""
+    for d in (start, *list(start.parents)[:5]):
+        f = d / ".env"
+        if f.is_file():
+            return f
+    return None
+
+
+def _load_dotenv(env_file: Path) -> None:
+    """Load KEY=VALUE lines from env_file into os.environ (no override)."""
     for line in env_file.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
@@ -48,11 +54,14 @@ class AgentConfig:
     rag: bool = False
     sql_checks: bool = False
     clarify: bool = False
+    run_name: str = "h1"
 
 
 def load_config(path: str) -> AgentConfig:
     p = Path(path)
-    _load_dotenv(p.parent)
+    env_file = _find_dotenv(p.parent)
+    if env_file is not None:
+        _load_dotenv(env_file)
     raw = yaml.safe_load(p.read_text()) or {}
     for k, v in raw.items():
         if isinstance(v, str):

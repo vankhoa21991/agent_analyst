@@ -1,0 +1,18 @@
+[
+  {
+    "repeat": 0,
+    "stop_reason": "token_budget",
+    "steps": 9,
+    "tokens": 83152,
+    "clarifications": 2,
+    "sql_runs": 8,
+    "sql_errors": 2,
+    "final_sql": "SELECT locregion, COUNT(*) AS n\nFROM households\nGROUP BY locregion\nORDER BY n DESC",
+    "final_sql_executes": true,
+    "answer": "Stopped: the token budget (80000 tokens) was used up.",
+    "user_simulator_responses": [
+      "It should be bathrooms per resident.\nUse the bath count divided by the resident count.",
+      "Use locregion for the area.\nThat is the area code I want to group by."
+    ]
+  }
+]

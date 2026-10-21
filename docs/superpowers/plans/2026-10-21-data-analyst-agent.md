@@ -170,12 +170,12 @@ tests/                     one test file per module
   - `Agent(cfg, llm, tools, tracer, ask_user: Callable[[str], str], approve: Callable[[str], bool])`.
   - `Agent.run(question: str) -> AgentResult`.
 
-- [ ] **Step 1: Write failing tests** with a scripted fake `LLMClient`: `test_answers_after_tool_call` (list_tables, then final text, gives `stop_reason == "answered"` and `steps == 2`); `test_malformed_arguments_reported_to_model` (invalid JSON, then a valid call; no exception; the error text is in the next messages); `test_unknown_tool_name_reported`; `test_max_steps_stops`; `test_token_budget_stops`; `test_write_waits_for_approval` (approver returns True: write executed on scratch); `test_write_denied_runs_nothing` (approver returns False: scratch unchanged, answer mentions it was not run); `test_ask_user_counts_clarification`; `test_model_down_returns_stop_reason`; `test_context_overflow_stops_before_calling` (messages estimated beyond `context_window` give `"context_overflow"`).
-- [ ] **Step 2: Run** `uv run pytest tests/test_loop.py -v`. Expected: FAIL.
-- [ ] **Step 3: Implement** the loop: system prompt (role, rules, "show the SQL you used"), message list, repeat model call then tool calls then results until the model replies with no tool calls. Parse `raw_arguments` with `json.loads`. Estimate context size as characters / 3. The last successful `run_sql` text becomes `AgentResult.sql`.
-- [ ] **Step 4: Run** the tests. Expected: PASS.
-- [ ] **Step 5: Manual check** against the real model: `uv run python -m analyst.loop "How many orders are there?"` prints an answer and the trace shows in Langfuse.
-- [ ] **Step 6: Commit.**
+- [x] **Step 1: Write failing tests** with a scripted fake `LLMClient`: `test_answers_after_tool_call` (list_tables, then final text, gives `stop_reason == "answered"` and `steps == 2`); `test_malformed_arguments_reported_to_model` (invalid JSON, then a valid call; no exception; the error text is in the next messages); `test_unknown_tool_name_reported`; `test_max_steps_stops`; `test_token_budget_stops`; `test_write_waits_for_approval` (approver returns True: write executed on scratch); `test_write_denied_runs_nothing` (approver returns False: scratch unchanged, answer mentions it was not run); `test_ask_user_counts_clarification`; `test_model_down_returns_stop_reason`; `test_context_overflow_stops_before_calling` (messages estimated beyond `context_window` give `"context_overflow"`).
+- [x] **Step 2: Run** `uv run pytest tests/test_loop.py -v`. Expected: FAIL.
+- [x] **Step 3: Implement** the loop: system prompt (role, rules, "show the SQL you used"), message list, repeat model call then tool calls then results until the model replies with no tool calls. Parse `raw_arguments` with `json.loads`. Estimate context size as characters / 3. The last successful `run_sql` text becomes `AgentResult.sql`.
+- [x] **Step 4: Run** the tests. Expected: PASS.
+- [x] **Step 5: Manual check (Langfuse UI part pending docker)** against the real model: `uv run python -m analyst.loop "How many orders are there?"` prints an answer and the trace shows in Langfuse.
+- [x] **Step 6: Commit.**
 
 ### Task 6: Eval harness, custom suite, runs B0 and H1 (about 12 h)
 
@@ -191,12 +191,12 @@ tests/                     one test file per module
   - CLI: `uv run python -m evals.run --suite custom --config configs/h1.yaml --repeats 3 [--limit N]`, which writes JSON to `docs/results/`.
   - `questions.jsonl` line: `{"id", "question", "gold_sql", "ambiguous": bool, "write": bool}`.
 
-- [ ] **Step 1: Write failing tests**: `test_match_ignores_row_order_by_default`; `test_match_numeric_tolerance`; `test_match_different_columns_false`; `test_runner_pass_k_counts_only_questions_solved_every_repeat` (fake agent right 2 of 3 times gives `pass_k == 0`).
-- [ ] **Step 2: Run** `uv run pytest tests/test_grading.py tests/test_runner.py -v`. Expected: FAIL.
-- [ ] **Step 3: Implement** grading, runner and CLI. B0 is the same loop with no tools: the full schema (from `Database.describe`) goes in the prompt and the model answers with SQL directly. H1 uses the schema tools. Each run resets the scratch copy first.
-- [ ] **Step 4: Run** the tests. Expected: PASS.
-- [ ] **Step 5: Write the custom suite**: 50 questions to start, up to 100 if time allows; at least 10 ambiguous (using the Task 1 definitions) and 5 write questions (for example "Fix the category spelling of X"). Draft candidates with the model, then verify every `gold_sql` by hand and keep the verified ones. Add `tests/test_write_approval.py`, which runs every `write: true` question with an approver that always denies and asserts the scratch database is unchanged.
-- [ ] **Step 6: Run B0 and H1** on the suite with `--repeats 3`; use the speed notes from Task 0 to pick `--limit` if a run would take over 3 hours. Save the reports and record the model string, quantisation and date.
+- [x] **Step 1: Write failing tests**: `test_match_ignores_row_order_by_default`; `test_match_numeric_tolerance`; `test_match_different_columns_false`; `test_runner_pass_k_counts_only_questions_solved_every_repeat` (fake agent right 2 of 3 times gives `pass_k == 0`).
+- [x] **Step 2: Run** `uv run pytest tests/test_grading.py tests/test_runner.py -v`. Expected: FAIL.
+- [x] **Step 3: Implement** grading, runner and CLI. B0 is the same loop with no tools: the full schema (from `Database.describe`) goes in the prompt and the model answers with SQL directly. H1 uses the schema tools. Each run resets the scratch copy first.
+- [x] **Step 4: Run** the tests. Expected: PASS.
+- [x] **Step 5: Write the custom suite**: 50 questions to start, up to 100 if time allows; at least 10 ambiguous (using the Task 1 definitions) and 5 write questions (for example "Fix the category spelling of X"). Draft candidates with the model, then verify every `gold_sql` by hand and keep the verified ones. Add `tests/test_write_approval.py`, which runs every `write: true` question with an approver that always denies and asserts the scratch database is unchanged.
+- [~] **Step 6: Run B0 and H1** on the suite with `--repeats 3`; use the speed notes from Task 0 to pick `--limit` if a run would take over 3 hours. Save the reports and record the model string, quantisation and date.
 - [ ] **Step 7: Commit.**
 
 ### Task 7: BIRD Mini-Dev runner and BIRD-Interact spike (about 8 h)
@@ -208,11 +208,11 @@ tests/                     one test file per module
 - Consumes: `run_suite` and `RunReport` (Task 6). Both new modules turn their benchmark's tasks into the question dict format so `run_suite` is reused.
 - Produces: `load_minidev(path: str, limit: int | None) -> list[dict]`; `load_birdinteract_mini(path: str, limit: int | None) -> list[dict]`; `--suite minidev|birdinteract` in `evals/run.py`.
 
-- [ ] **Step 1: Spike first (about 3 h, week 1–2 deadline).** Download BIRD-Interact Mini (SQLite) and read how its simulated user and knowledge base are called. Run one task end to end with the own loop, with the simulated user wired to `ask_user`. Write the result in `docs/notes/birdinteract-spike.md`.
-- [ ] **Step 2: Decide go or no-go.** If one task does not run by the end of week 2, drop BIRD-Interact as the main benchmark as the spec says: Mini-Dev plus the custom suite become the headline, and H4 is scored on the custom suite's ambiguous questions. Record the decision in the spike note.
-- [ ] **Step 3: Write failing test** `test_load_minidev_maps_fields` against a 2-task fixture file: asserts each dict has `id`, `question`, `gold_sql`, and the database path.
-- [ ] **Step 4: Run** `uv run pytest tests/test_minidev.py -v`. Expected: FAIL.
-- [ ] **Step 5: Implement** `minidev.py` (SQLite split only) and, if go, `birdinteract.py`.
+- [x] **Step 1: Spike first (about 3 h, week 1–2 deadline).** Download BIRD-Interact Mini (SQLite) and read how its simulated user and knowledge base are called. Run one task end to end with the own loop, with the simulated user wired to `ask_user`. Write the result in `docs/notes/birdinteract-spike.md`.
+- [x] **Step 2: Decide go or no-go.** If one task does not run by the end of week 2, drop BIRD-Interact as the main benchmark as the spec says: Mini-Dev plus the custom suite become the headline, and H4 is scored on the custom suite's ambiguous questions. Record the decision in the spike note.
+- [x] **Step 3: Write failing test** `test_load_minidev_maps_fields` against a 2-task fixture file: asserts each dict has `id`, `question`, `gold_sql`, and the database path.
+- [x] **Step 4: Run** `uv run pytest tests/test_minidev.py -v`. Expected: FAIL.
+- [~] **Step 5: Implement** `minidev.py` (SQLite split only) and, if go, `birdinteract.py`.
 - [ ] **Step 6: Run** the test (PASS), then run B0 and H1 on Mini-Dev (and on BIRD-Interact Mini if go) with a disclosed subset sized from the speed notes.
 - [ ] **Step 7: Commit.**
 

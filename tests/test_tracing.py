@@ -17,6 +17,20 @@ def test_tracer_noop_without_keys(monkeypatch, tmp_path):
     t.close()  # must not raise
 
 
+def test_tracer_disabled_by_env(monkeypatch, tmp_path):
+    # Even with keys present, LANGFUSE_ENABLED=0 keeps the tracer a no-op.
+    (tmp_path / ".env").write_text(
+        "LANGFUSE_PUBLIC_KEY=pk-x\nLANGFUSE_SECRET_KEY=sk-x\n"
+    )
+    monkeypatch.delenv("LANGFUSE_PUBLIC_KEY", raising=False)
+    monkeypatch.delenv("LANGFUSE_SECRET_KEY", raising=False)
+    monkeypatch.setenv("LANGFUSE_ENABLED", "0")
+    monkeypatch.chdir(tmp_path)
+    t = Tracer()
+    assert t.enabled is False
+    t.close()
+
+
 def test_tracer_records_errors(monkeypatch, tmp_path):
     monkeypatch.delenv("LANGFUSE_PUBLIC_KEY", raising=False)
     monkeypatch.delenv("LANGFUSE_SECRET_KEY", raising=False)
