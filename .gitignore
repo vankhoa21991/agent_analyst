@@ -1,0 +1,18 @@
+# data
+data/*.sqlite
+data/olist/
+data/bird/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+
+# secrets
+.env
+
+# local notes about runs in progress
+docs/notes/*.tmp

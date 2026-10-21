@@ -1,0 +1,21 @@
+# Agent configuration. Values of the form ${VAR} are expanded from the
+# environment (a .env file in the project root is loaded first, if present).
+model: qwen3.8-27b
+base_url: http://localhost:8080/v1
+api_key: ${ANALYST_API_KEY}
+
+# loop budgets
+max_steps: 12
+max_total_tokens: 20000
+context_window: 32000   # hard stop; the model's real window is 131072
+
+# data
+db_path: data/olist.sqlite
+scratch_path: data/scratch.sqlite
+row_limit: 200
+timeout_s: 10
+
+# feature flags (each eval run flips exactly one)
+rag: false
+sql_checks: false
+clarify: false
