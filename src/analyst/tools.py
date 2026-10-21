@@ -18,6 +18,7 @@ class ToolResult:
     text: str
     needs_approval: bool = False
     pending_sql: str | None = None
+    ok: bool = True
 
 
 def _cell(v) -> str:
@@ -167,7 +168,7 @@ class ToolRegistry:
                 return self._ask_user(arguments)
             return ToolResult(f"Unknown tool: {name}.")
         except Exception as e:  # tools never raise into the loop
-            return ToolResult(f"Tool error in {name}: {e}")
+            return ToolResult(f"Tool error in {name}: {e}", ok=False)
 
     def run_approved_write(self, sql: str) -> ToolResult:
         try:
@@ -176,7 +177,7 @@ class ToolRegistry:
                 f"Write executed on the scratch database: {n} row(s) changed."
             )
         except QueryError as e:
-            return ToolResult(f"Write failed: {e}")
+            return ToolResult(f"Write failed: {e}", ok=False)
 
     # -- tool bodies -----------------------------------------------------------
 
@@ -188,7 +189,7 @@ class ToolRegistry:
         try:
             info = self._db.describe(table)
         except QueryError as e:
-            return ToolResult(str(e))
+            return ToolResult(str(e), ok=False)
         lines = [f"Table {table}:"]
         lines.extend(
             f"  {c['name']} ({c['type']})" for c in info["columns"]
@@ -203,20 +204,23 @@ class ToolRegistry:
         sql = arguments.get("sql", "")
         check = check_sql(sql)
         if not check.ok:
-            return ToolResult(f"SQL rejected: {check.error}")
+            return ToolResult(f"SQL rejected: {check.error}", ok=False)
         if check.kind == "write":
             return ToolResult(
                 "This SQL changes data, so it cannot run here. Use the "
-                "execute_write tool instead; it asks the user for approval."
+                "execute_write tool instead; it asks the user for approval.",
+                ok=False,
             )
         if self._cfg.sql_checks:
             err = explain(self._db, sql)
             if err is not None:
-                return ToolResult(f"SQL check failed before running: {err}")
+                return ToolResult(
+                    f"SQL check failed before running: {err}", ok=False
+                )
         try:
             res = self._db.query(sql)
         except QueryError as e:
-            return ToolResult(str(e))
+            return ToolResult(str(e), ok=False)
         text = _format_result(res)
         if self._cfg.sql_checks:
             notes = [
@@ -230,10 +234,11 @@ class ToolRegistry:
         sql = arguments.get("sql", "")
         check = check_sql(sql)
         if not check.ok:
-            return ToolResult(f"SQL rejected: {check.error}")
+            return ToolResult(f"SQL rejected: {check.error}", ok=False)
         if check.kind != "write":
             return ToolResult(
-                "This SQL does not change data; use run_sql for reads."
+                "This SQL does not change data; use run_sql for reads.",
+                ok=False,
             )
         return ToolResult(
             "Write queued. It will only run if the user approves it; do not "
@@ -256,7 +261,9 @@ class ToolRegistry:
 
     def _ask_user(self, arguments: dict) -> ToolResult:
         if self.ask_user is None:
-            return ToolResult("The user cannot be asked in this configuration.")
+            return ToolResult(
+                "The user cannot be asked in this configuration.", ok=False
+            )
         question = arguments.get("question", "")
         answer = self.ask_user(question)
         return ToolResult(f"User answer: {answer}")
