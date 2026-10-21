@@ -111,11 +111,11 @@ tests/                     one test file per module
   - `Database.reset_scratch() -> None` copies the source file over the scratch file.
   - `Database.execute_write(sql: str) -> int` runs on the scratch copy only and returns the row count changed.
 
-- [ ] **Step 1: Write failing tests**: `test_query_rejects_write_on_readonly` (`DELETE FROM orders` raises `QueryError`); `test_query_row_limit_truncates` (limit 5 on a 100-row table gives 5 rows, `truncated is True`); `test_query_timeout` (a recursive CTE counting to 10^9 with `timeout_s=0.5` raises `QueryError` within 2 s); `test_write_goes_to_scratch_only` (after `execute_write`, the scratch count changed and the source did not); `test_reset_scratch_restores`.
-- [ ] **Step 2: Run** `uv run pytest tests/test_db.py -v`. Expected: FAIL.
-- [ ] **Step 3: Implement** `db.py` with the signatures above.
-- [ ] **Step 4: Run** the tests. Expected: PASS.
-- [ ] **Step 5: Commit.**
+- [x] **Step 1: Write failing tests**: `test_query_rejects_write_on_readonly` (`DELETE FROM orders` raises `QueryError`); `test_query_row_limit_truncates` (limit 5 on a 100-row table gives 5 rows, `truncated is True`); `test_query_timeout` (a recursive CTE counting to 10^9 with `timeout_s=0.5` raises `QueryError` within 2 s); `test_write_goes_to_scratch_only` (after `execute_write`, the scratch count changed and the source did not); `test_reset_scratch_restores`.
+- [x] **Step 2: Run** `uv run pytest tests/test_db.py -v`. Expected: FAIL.
+- [x] **Step 3: Implement** `db.py` with the signatures above.
+- [x] **Step 4: Run** the tests. Expected: PASS.
+- [x] **Step 5: Commit.**
 
 ### Task 3: SQL checks (about 4 h)
 
