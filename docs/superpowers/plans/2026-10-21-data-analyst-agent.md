@@ -90,12 +90,12 @@ tests/                     one test file per module
 **Interfaces:**
 - Produces: `load_olist(csv_dir: str, sqlite_path: str) -> dict[str, int]` (table name to row count).
 
-- [ ] **Step 1: Write failing test** `test_load_olist_creates_tables` using a 3-row fixture CSV set in `tests/fixtures/olist/`: asserts `orders` and `order_items` exist with the fixture row counts.
-- [ ] **Step 2: Run** `uv run pytest tests/test_load_olist.py -v`. Expected: FAIL.
-- [ ] **Step 3: Implement** `load_olist` with `sqlite3` and the standard library `csv`; one table per CSV, table names from file names. Download the Olist public dataset (Kaggle, CC BY-NC-SA) by hand into `data/olist/` (git-ignored).
-- [ ] **Step 4: Run** the test. Expected: PASS. Then run the script on the real data and check `SELECT COUNT(*) FROM orders` is about 99 441.
-- [ ] **Step 5: Write the docs** (by hand, these feed RAG later): `data_dictionary.md` with one section per table and one line per column; `business_definitions.md` with at least 8 definitions that make questions ambiguous (for example "revenue", "active seller", "late delivery", "repeat customer").
-- [ ] **Step 6: Commit.**
+- [x] **Step 1: Write failing test** `test_load_olist_creates_tables` using a 3-row fixture CSV set in `tests/fixtures/olist/`: asserts `orders` and `order_items` exist with the fixture row counts.
+- [x] **Step 2: Run** `uv run pytest tests/test_load_olist.py -v`. Expected: FAIL.
+- [x] **Step 3: Implement** `load_olist` with `sqlite3` and the standard library `csv`; one table per CSV, table names from file names. Download the Olist public dataset (Kaggle, CC BY-NC-SA) by hand into `data/olist/` (git-ignored).
+- [x] **Step 4: Run** the test. Expected: PASS. Then run the script on the real data and check `SELECT COUNT(*) FROM orders` is about 99 441.
+- [x] **Step 5: Write the docs** (by hand, these feed RAG later): `data_dictionary.md` with one section per table and one line per column; `business_definitions.md` with at least 8 definitions that make questions ambiguous (for example "revenue", "active seller", "late delivery", "repeat customer").
+- [x] **Step 6: Commit.**
 
 ### Task 2: Database layer (about 5 h)
 

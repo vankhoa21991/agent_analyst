@@ -3,8 +3,122 @@
 from __future__ import annotations
 
 import csv
+import shutil
 import sqlite3
+import time
+from dataclasses import dataclass
 from pathlib import Path
+
+
+class QueryError(Exception):
+    """The SQL could not be run: syntax error, a write on the read-only
+    connection, or the time limit was hit."""
+
+
+@dataclass
+class QueryResult:
+    columns: list[str]
+    rows: list[tuple]
+    truncated: bool
+    seconds: float
+
+
+class Database:
+    """Read-only access to the source database plus an isolated scratch copy
+    for approved writes. Writes never touch the source file."""
+
+    def __init__(self, path: str, scratch_path: str, row_limit: int, timeout_s: float):
+        self.path = path
+        self.scratch_path = scratch_path
+        self.row_limit = row_limit
+        self.timeout_s = timeout_s
+
+    # -- read-only queries -------------------------------------------------
+
+    def _read_connection(self) -> sqlite3.Connection:
+        return sqlite3.connect(f"file:{self.path}?mode=ro", uri=True)
+
+    def query(self, sql: str) -> QueryResult:
+        t0 = time.perf_counter()
+        con = self._read_connection()
+        deadline = t0 + self.timeout_s
+        state = {"expired": False}
+
+        def progress() -> int:
+            if time.perf_counter() > deadline:
+                state["expired"] = True
+                return 1  # abort the query
+            return 0
+
+        try:
+            con.set_progress_handler(progress, 10_000)
+            cur = con.execute(sql)
+            columns = [d[0] for d in cur.description] if cur.description else []
+            rows = cur.fetchmany(self.row_limit + 1)
+            truncated = len(rows) > self.row_limit
+            if truncated:
+                rows = rows[: self.row_limit]
+            return QueryResult(
+                columns=columns, rows=rows, truncated=truncated,
+                seconds=time.perf_counter() - t0,
+            )
+        except sqlite3.Error as e:
+            if state["expired"]:
+                raise QueryError(
+                    f"query timed out after {self.timeout_s}s" ) from e
+            raise QueryError(f"SQL error: {e}") from e
+        finally:
+            con.close()
+
+    def tables(self) -> list[str]:
+        con = self._read_connection()
+        try:
+            return [
+                r[0]
+                for r in con.execute(
+                    "SELECT name FROM sqlite_master"
+                    " WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+                    " ORDER BY name"
+                )
+            ]
+        finally:
+            con.close()
+
+    def describe(self, table: str, samples: int = 3) -> dict:
+        con = self._read_connection()
+        try:
+            cols = [
+                {"name": r[1], "type": r[2]}
+                for r in con.execute(f'PRAGMA table_info("{table}")')
+            ]
+            if not cols:
+                raise QueryError(f"unknown table: {table}")
+            sample_rows = [
+                tuple(r)
+                for r in con.execute(f'SELECT * FROM "{table}" LIMIT {samples}')
+            ]
+            return {"columns": cols, "sample_rows": sample_rows}
+        except sqlite3.Error as e:
+            raise QueryError(f"SQL error: {e}") from e
+        finally:
+            con.close()
+
+    # -- scratch copy for approved writes ----------------------------------
+
+    def reset_scratch(self) -> None:
+        shutil.copyfile(self.path, self.scratch_path)
+
+    def execute_write(self, sql: str) -> int:
+        """Run a data-changing statement on the scratch copy only."""
+        con = sqlite3.connect(self.scratch_path)
+        try:
+            cur = con.execute(sql)
+            con.commit()
+            return cur.rowcount
+        except sqlite3.Error as e:
+            raise QueryError(f"SQL error: {e}") from e
+        finally:
+            con.close()
 
 
 def _table_name(csv_file: str) -> str:
