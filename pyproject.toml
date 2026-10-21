@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "openai>=1.60",
     "pyyaml>=6",
+    "langfuse>=3",
 ]
 
 [project.optional-dependencies]

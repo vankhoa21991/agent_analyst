@@ -130,11 +130,11 @@ tests/                     one test file per module
   - `explain(db: Database, sql: str) -> str | None` returns the error text from `EXPLAIN QUERY PLAN` or `None`.
   - `flag_result(result: QueryResult) -> list[str]` returns `"empty"` for zero rows and `"very_large"` when `truncated`.
 
-- [ ] **Step 1: Write failing tests**: `test_two_statements_rejected`; `test_comment_prefixed_delete_is_write`; `test_with_delete_is_write`; `test_select_is_read`; `test_syntax_error_returns_message`; `test_explain_catches_unknown_table`; `test_flag_empty`; `test_flag_very_large`.
-- [ ] **Step 2: Run** `uv run pytest tests/test_sqlcheck.py -v`. Expected: FAIL.
-- [ ] **Step 3: Implement** with `sqlglot.parse` and `sqlglot.exp` node types.
-- [ ] **Step 4: Run** the tests. Expected: PASS.
-- [ ] **Step 5: Commit.**
+- [x] **Step 1: Write failing tests**: `test_two_statements_rejected`; `test_comment_prefixed_delete_is_write`; `test_with_delete_is_write`; `test_select_is_read`; `test_syntax_error_returns_message`; `test_explain_catches_unknown_table`; `test_flag_empty`; `test_flag_very_large`.
+- [x] **Step 2: Run** `uv run pytest tests/test_sqlcheck.py -v`. Expected: FAIL.
+- [x] **Step 3: Implement** with `sqlglot.parse` and `sqlglot.exp` node types.
+- [x] **Step 4: Run** the tests. Expected: PASS.
+- [x] **Step 5: Commit.**
 
 ### Task 4: Tools and tracing (about 6 h)
 
@@ -151,12 +151,12 @@ tests/                     one test file per module
   - `ToolRegistry.run_approved_write(sql: str) -> ToolResult`.
   - `Tracer.span(name: str, **attrs)` as a context manager; records SQL text, row count, seconds and errors; a no-op when Langfuse keys are absent.
 
-- [ ] **Step 1: Write failing tests**: `test_list_tables`; `test_describe_table_includes_samples`; `test_run_sql_rejects_write_with_hint`; `test_execute_write_requires_approval_and_changes_nothing`; `test_run_approved_write_changes_scratch`; `test_sql_checks_flag_adds_empty_note` (flag on, query returns zero rows, text contains "empty"); `test_unknown_tool_returns_error_text`; `test_tracer_noop_without_keys`.
-- [ ] **Step 2: Run** `uv run pytest tests/test_tools.py tests/test_tracing.py -v`. Expected: FAIL.
-- [ ] **Step 3: Implement** both modules. Tool errors are returned as `ToolResult.text`, never raised, so the model can read them and retry.
-- [ ] **Step 4: Run** the tests. Expected: PASS.
-- [ ] **Step 5: Start Langfuse** with `docker compose up -d`, create a project, put the keys in `.env`, and confirm a trace from a small script appears in the UI.
-- [ ] **Step 6: Commit.**
+- [x] **Step 1: Write failing tests**: `test_list_tables`; `test_describe_table_includes_samples`; `test_run_sql_rejects_write_with_hint`; `test_execute_write_requires_approval_and_changes_nothing`; `test_run_approved_write_changes_scratch`; `test_sql_checks_flag_adds_empty_note` (flag on, query returns zero rows, text contains "empty"); `test_unknown_tool_returns_error_text`; `test_tracer_noop_without_keys`.
+- [x] **Step 2: Run** `uv run pytest tests/test_tools.py tests/test_tracing.py -v`. Expected: FAIL.
+- [x] **Step 3: Implement** both modules. Tool errors are returned as `ToolResult.text`, never raised, so the model can read them and retry.
+- [x] **Step 4: Run** the tests. Expected: PASS.
+- [ ] **Step 5 (PENDING: no docker in this env, verify manually): Start Langfuse** with `docker compose up -d`, create a project, put the keys in `.env`, and confirm a trace from a small script appears in the UI.
+- [x] **Step 6: Commit.**
 
 ### Task 5: Agent loop (about 8 h)
 
