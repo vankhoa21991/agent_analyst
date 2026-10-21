@@ -75,12 +75,12 @@ tests/                     one test file per module
   - `LLMClient(cfg: AgentConfig).chat(messages: list[dict], tools: list[dict] | None = None) -> LLMReply`.
   - `class ModelUnavailable(Exception)`.
 
-- [ ] **Step 1: Write failing tests.** `test_config.py::test_load_config_reads_flags` loads a temp yaml and asserts `rag is False`, `sql_checks is False`, `clarify is False` by default and `max_steps == 12`. `test_llm.py::test_chat_parses_tool_call` fakes the openai client and asserts `reply.tool_calls[0].name == "run_sql"` and token counts are copied. `test_llm.py::test_server_down_raises_model_unavailable` points `base_url` at a closed port and asserts `ModelUnavailable`.
-- [ ] **Step 2: Run** `uv run pytest tests/test_config.py tests/test_llm.py -v`. Expected: FAIL (modules missing).
-- [ ] **Step 3: Implement** the config and client with the signatures above. Use the openai SDK with a custom `base_url`; wrap connection errors in `ModelUnavailable`. `agent.yaml` defaults: `max_steps: 12`, `row_limit: 200`, `timeout_s: 10`, all three flags false.
-- [ ] **Step 4: Run** the tests again. Expected: PASS.
-- [ ] **Step 5: Write `scripts/measure_speed.py`**: sends 5 fixed prompts through `LLMClient` and prints mean tokens/s and seconds per reply. Run it against the real llama-server and record the numbers in `docs/notes/speed.md`. Use them in Task 6 to set sample sizes.
-- [ ] **Step 6: Commit** (`git add -A`; message `chore: scaffold project, config and LLM client`).
+- [x] **Step 1: Write failing tests.** `test_config.py::test_load_config_reads_flags` loads a temp yaml and asserts `rag is False`, `sql_checks is False`, `clarify is False` by default and `max_steps == 12`. `test_llm.py::test_chat_parses_tool_call` fakes the openai client and asserts `reply.tool_calls[0].name == "run_sql"` and token counts are copied. `test_llm.py::test_server_down_raises_model_unavailable` points `base_url` at a closed port and asserts `ModelUnavailable`.
+- [x] **Step 2: Run** `uv run pytest tests/test_config.py tests/test_llm.py -v`. Expected: FAIL (modules missing).
+- [x] **Step 3: Implement** the config and client with the signatures above. Use the openai SDK with a custom `base_url`; wrap connection errors in `ModelUnavailable`. `agent.yaml` defaults: `max_steps: 12`, `row_limit: 200`, `timeout_s: 10`, all three flags false.
+- [x] **Step 4: Run** the tests again. Expected: PASS.
+- [x] **Step 5: Write `scripts/measure_speed.py`**: sends 5 fixed prompts through `LLMClient` and prints mean tokens/s and seconds per reply. Run it against the real llama-server and record the numbers in `docs/notes/speed.md`. Use them in Task 6 to set sample sizes.
+- [x] **Step 6: Commit** (`git add -A`; message `chore: scaffold project, config and LLM client`).
 
 ### Task 1: Olist database and documentation (about 5 h)
 

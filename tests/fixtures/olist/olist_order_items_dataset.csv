@@ -1,0 +1,4 @@
+order_item_id,order_id,seller_id,shipping_limit_date,price,product_id
+1,o1,s1,2018-01-05 00:00:00,10.0,p1
+2,o1,s1,2018-01-05 00:00:00,5.5,p2
+3,o2,s2,2018-01-06 00:00:00,20.0,p1
