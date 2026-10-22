@@ -212,9 +212,9 @@ tests/                     one test file per module
 - [x] **Step 2: Decide go or no-go.** If one task does not run by the end of week 2, drop BIRD-Interact as the main benchmark as the spec says: Mini-Dev plus the custom suite become the headline, and H4 is scored on the custom suite's ambiguous questions. Record the decision in the spike note.
 - [x] **Step 3: Write failing test** `test_load_minidev_maps_fields` against a 2-task fixture file: asserts each dict has `id`, `question`, `gold_sql`, and the database path.
 - [x] **Step 4: Run** `uv run pytest tests/test_minidev.py -v`. Expected: FAIL.
-- [~] **Step 5: Implement** `minidev.py` (SQLite split only) and, if go, `birdinteract.py`.
-- [ ] **Step 6: Run** the test (PASS), then run B0 and H1 on Mini-Dev (and on BIRD-Interact Mini if go) with a disclosed subset sized from the speed notes.
-- [ ] **Step 7: Commit.**
+- [x] **Step 5: Implement** `minidev.py` (SQLite split only) and, if go, `birdinteract.py`. (`minidev.py` done; `birdinteract.py` deferred — public data has no GT to grade against, see spike note.)
+- [x] **Step 6: Run** the test (PASS), then run B0 and H1 on Mini-Dev (and on BIRD-Interact Mini if go) with a disclosed subset sized from the speed notes. (22-task subset: B0 72.7%, H1 86.4%; BIRD-Interact covered by the 2-task spike, scoring blocked on GT.)
+- [x] **Step 7: Commit.**
 
 ### Task 8: RAG schema linking, run H2 (about 10 h)
 

@@ -68,8 +68,65 @@ writes: 0% / 100%.
   passes — denied writes never touch the scratch DB (byte-identical),
   and the source DB is read-only by construction.
 
+## BIRD Mini-Dev (SQLite) — disclosed subset
+
+22 questions (2 per database × 11 DBs: 12 simple, 9 moderate,
+1 challenging), 1 repeat, 2026-10-22. BIRD's `evidence` (external
+knowledge) is appended to the question, as the benchmark intends.
+
+| config | success | tokens/task | steps/task | sql err |
+|---|---|---|---|---|
+| B0 | 72.7% (16/22) | 3399 | 1.00 | 0.0% |
+| H1 | 86.4% (19/22) | 9168 | 4.86 | 2.3% |
+
+On the external benchmark **H1 beats B0 by 13.7 pp** — the opposite of
+the custom suite's strict-read split. BIRD questions are
+multi-table and knowledge-heavy, exactly where exploration + tools
+pay off.
+
+Error analysis (all failures):
+
+- `minidev_340`, `minidev_341` (card_games, both configs): the agent
+  returned `name` where the gold returns `id` ("which cards…"). Same
+  rows, different projection — **disputed gold** (name is arguably the
+  better answer).
+- `minidev_341` (B0 only): the gold's own filter is suspicious
+  (`cardKingdomId IS NULL OR cardKingdomId IS NULL` — duplicated
+  column, presumably meant `cardKingdomFoilId`). **Gold bug.**
+- `minidev_197` (toxicology, both configs): the gold's
+  `atom JOIN bond ON molecule_id` multiplies each atom by the
+  molecule's bond count, inflating the per-molecule oxygen count;
+  the agent's `SUM(element='o')` per molecule is the cleaner
+  reading. **Gold quirk.**
+- B0-only genuine errors: `minidev_1472` (wrong year handling),
+  `minidev_1149` (wrong in/out-patient logic), `minidev_89`
+  (wrong district/frequency mapping).
+
+Net: H1's 3 failures are all projection/gold-quirk issues, not
+reasoning errors; B0's 6 include 3 genuine reasoning errors.
+
+## BIRD-Interact Mini (SQLite)
+
+Status: **spike validated, formal scoring blocked on non-public GT.**
+
+- The public `birdsql/mini-interact` data (300 tasks, 26 SQLite DBs)
+  ships with empty `sol_sql` and `test_cases`; official GT and test
+  cases are distributed by email only (`bird.bench25@gmail.com`).
+- The spike (2 tasks: `households_1`, `alien_1`) ran the full loop
+  end to end with the official-style LLM user simulator: the agent
+  clarified the annotated ambiguities, the simulator answered from
+  the annotations and refused off-annotation questions, final SQL
+  executed. Details in `docs/notes/birdinteract-spike.md`.
+- Per the plan's fallback rule, **Mini-Dev plus the custom suite are
+  the headline benchmarks**; BIRD-Interact is reported as a
+  qualitative validation of the clarify + simulated-user wiring.
+  `load_birdinteract_mini` (gradable questions) is deferred until GT
+  is obtained.
+
 ## Artifacts
 
 - `docs/results/custom_b0_2026-10-22.json`
 - `docs/results/custom_h1_2026-10-22.json`
+- `docs/results/minidev_b0_2026-10-22.json`
+- `docs/results/minidev_h1_2026-10-22.json`
 - `tests/test_write_approval.py` (live, ~2 min)

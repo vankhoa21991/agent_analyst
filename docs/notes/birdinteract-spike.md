@@ -136,11 +136,18 @@ benchmark:
    full run at ~37 tok/s is days, not hours — the plan's "disclosed
    subset" approach is mandatory (e.g. 10–20 tasks).
 
-## TODO
+## Status (final, 2026-10-22)
 
-- [ ] Record run-2 result above.
-- [ ] Optionally email for GT + test cases to enable official grading.
-- [ ] `evals/birdinteract.py`: map Mini tasks to the question-dict format
-      for `run_suite` (only if GT obtained; else keep the spike script).
-- [ ] BIRD Mini-Dev: `birdsql/bird_mini_dev` (500 SQLite pairs, 11 DBs);
-      DBs come from the Google Drive "Complete Package" zip.
+- [x] Run-2 results recorded above (households_1, alien_1).
+- [x] BIRD Mini-Dev loader built and run: `evals/minidev.py`, 22-task
+      disclosed subset (2/DB × 11 DBs), B0 72.7% vs H1 86.4% — see
+      `docs/notes/evals.md`.
+- [ ] Optionally email for GT + test cases to enable official
+      BIRD-Interact grading (`bird.bench25@gmail.com`).
+- [ ] `evals/birdinteract.py`: map Mini tasks to the question-dict
+      format for `run_suite` (only if GT obtained; else keep the spike
+      script). Deferred: without GT there is nothing to grade against.
+
+Headline benchmarks per the plan's fallback rule: **Mini-Dev + custom
+suite**; BIRD-Interact Mini stands as a qualitative validation of the
+clarify + simulated-user wiring.
