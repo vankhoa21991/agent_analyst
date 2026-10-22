@@ -196,8 +196,8 @@ tests/                     one test file per module
 - [x] **Step 3: Implement** grading, runner and CLI. B0 is the same loop with no tools: the full schema (from `Database.describe`) goes in the prompt and the model answers with SQL directly. H1 uses the schema tools. Each run resets the scratch copy first.
 - [x] **Step 4: Run** the tests. Expected: PASS.
 - [x] **Step 5: Write the custom suite**: 50 questions to start, up to 100 if time allows; at least 10 ambiguous (using the Task 1 definitions) and 5 write questions (for example "Fix the category spelling of X"). Draft candidates with the model, then verify every `gold_sql` by hand and keep the verified ones. Add `tests/test_write_approval.py`, which runs every `write: true` question with an approver that always denies and asserts the scratch database is unchanged.
-- [~] **Step 6: Run B0 and H1** on the suite with `--repeats 3`; use the speed notes from Task 0 to pick `--limit` if a run would take over 3 hours. Save the reports and record the model string, quantisation and date.
-- [ ] **Step 7: Commit.**
+- [x] **Step 6: Run B0 and H1** on the suite with `--repeats 3`; use the speed notes from Task 0 to pick `--limit` if a run would take over 3 hours. Save the reports and record the model string, quantisation and date.
+- [x] **Step 7: Commit.**
 
 ### Task 7: BIRD Mini-Dev runner and BIRD-Interact spike (about 8 h)
 
