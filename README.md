@@ -19,11 +19,17 @@ row; same questions and repeats for every run.
 
 | Config | Flags | Custom 55q (3×) strict | loose | pass^3 | Mini-Dev 22 (1×) | tokens/task | steps/task | SQL err |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| B0 | baseline prompt, no tools | | | | | | | |
-| H1 | harness + tools | | | | | | | |
-| H2 | + RAG | | | | | | | |
-| H3 | + SQL checks | | | | | | | |
-| H4 | + clarify | | | | | | | |
+| B0 | baseline prompt, no tools | 69.7% | 77.6% | 60.0% | 72.7% | 2327 | 1.0 | 9.1% |
+| H1 | harness + tools | 72.7% | 84.2% | 67.3% | 86.4% | 6187 | 4.5 | 0.8% |
+| H2 | + RAG | **83.6%** | 94.5% | 76.4% | 77.3%* | 7525 | 3.5 | 0.0% |
+| H3 | + SQL checks | 81.2% | **95.2%** | **78.2%** | 77.3%* | 7357 | 3.4 | 0.5% |
+| H4 | + clarify | 79.4% | 92.7% | 72.7% | 77.3%* | 8264 | 3.5 | 1.0% |
+
+\* RAG is built for the Olist DB, so on Mini-Dev (per-question DBs) it is
+off by design — those rows are H1 re-runs; the 86.4% vs 77.3% spread is
+single-repeat variance. H3/H4 vs H2 on the custom suite is also inside
+run-to-run variance of the local model; the features are safety nets,
+not score drivers (details in [docs/results/results.md](docs/results/results.md)).
 
 (Full numbers, per-suite breakdowns, and the list of disputed gold
 answers: [docs/results/results.md](docs/results/results.md).)
