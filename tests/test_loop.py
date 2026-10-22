@@ -239,3 +239,113 @@ def test_answer_sql_block_becomes_result_sql(tmp_path):
     res = agent.run("How many orders were delivered?")
     assert res.stop_reason == "answered"
     assert res.sql == "SELECT COUNT(*) AS n FROM orders WHERE order_status = 'delivered'"
+
+
+def test_retry_with_error_text_then_success(tmp_path):
+    """With sql_checks on, a failed SQL feeds its error back and the model
+    gets a second chance."""
+    agent, llm, db, _, _ = make_agent(tmp_path, [
+        tool_reply("run_sql", {"sql": "SELECT nope FROM orders"}),
+        tool_reply("run_sql", {"sql": "SELECT COUNT(*) AS n FROM orders"}),
+        text_reply("There are 3 orders."),
+    ], sql_checks=True)
+    res = agent.run("How many orders?")
+    assert res.stop_reason == "answered"
+    assert res.sql_runs == 2
+    assert res.sql_errors == 1
+    # the error text reached the model in the next call
+    second_call_messages = llm.calls[1][0]
+    tool_texts = [str(m.get("content")) for m in second_call_messages
+                  if m.get("role") == "tool"]
+    assert any("no such column" in t for t in tool_texts)
+
+
+def test_retry_limit_two(tmp_path):
+    """With sql_checks on, three consecutive SQL failures (1 + 2 retries)
+    stop the run; the answer carries the last error."""
+    bad = tool_reply("run_sql", {"sql": "SELECT nope FROM orders"})
+    agent, llm, db, _, _ = make_agent(tmp_path, [bad, bad, bad, bad],
+                                      sql_checks=True)
+    res = agent.run("How many orders?")
+    assert res.stop_reason == "sql_retry_limit"
+    assert res.sql_runs == 3
+    assert res.sql_errors == 3
+    assert "no such column" in res.answer
+    assert len(llm.calls) == 3  # no fourth model call
+
+
+def test_checks_off_means_no_explain(tmp_path, monkeypatch):
+    import analyst.tools as tools_mod
+
+    calls = []
+    monkeypatch.setattr(
+        tools_mod, "explain",
+        lambda db, sql: calls.append(sql) or None,
+    )
+    agent, llm, db, _, _ = make_agent(tmp_path, [
+        tool_reply("run_sql", {"sql": "SELECT COUNT(*) AS n FROM orders"}),
+        text_reply("3."),
+    ], sql_checks=False)
+    agent.run("How many orders?")
+    assert calls == []
+
+
+def test_checks_on_calls_explain(tmp_path, monkeypatch):
+    import analyst.tools as tools_mod
+
+    calls = []
+    monkeypatch.setattr(
+        tools_mod, "explain",
+        lambda db, sql: calls.append(sql) or None,
+    )
+    agent, llm, db, _, _ = make_agent(tmp_path, [
+        tool_reply("run_sql", {"sql": "SELECT COUNT(*) AS n FROM orders"}),
+        text_reply("3."),
+    ], sql_checks=True)
+    agent.run("How many orders?")
+    assert calls == ["SELECT COUNT(*) AS n FROM orders"]
+
+
+def test_clarify_off_never_offers_ask_user_tool(tmp_path):
+    agent, llm, db, _, asked = make_agent(tmp_path, [
+        text_reply("3."),
+    ], clarify=False)
+    agent.run("How many orders?")
+    specs = llm.calls[0][1]
+    names = [s["function"]["name"] for s in specs]
+    assert "ask_user" not in names
+    assert asked == []
+
+
+def test_clarify_on_passes_answer_back_into_messages(tmp_path):
+    agent, llm, db, _, asked = make_agent(tmp_path, [
+        tool_reply("ask_user", {"question": "What does revenue mean?"}),
+        tool_reply("run_sql", {"sql": "SELECT COUNT(*) AS n FROM orders"}),
+        text_reply("3 orders."),
+    ], clarify=True)
+    res = agent.run("What is the revenue?")
+    assert res.clarifications == 1
+    assert asked == ["What does revenue mean?"]
+    # the stored answer ("net of refunds" from make_agent's callback)
+    # reached the model in the next call
+    second_call = llm.calls[1][0]
+    tool_texts = [str(m.get("content")) for m in second_call
+                  if m.get("role") == "tool"]
+    assert any("net of refunds" in t for t in tool_texts)
+
+
+def test_at_most_one_clarification_per_run(tmp_path):
+    agent, llm, db, _, asked = make_agent(tmp_path, [
+        tool_reply("ask_user", {"question": "First ambiguity?"}),
+        tool_reply("ask_user", {"question": "Second ambiguity?"}),
+        text_reply("3 orders."),
+    ], clarify=True)
+    res = agent.run("Ambiguous question.")
+    assert res.clarifications == 1
+    assert len(asked) == 1
+    # the second ask_user was refused with guidance, not answered
+    third_call = llm.calls[2][0]
+    tool_texts = [str(m.get("content")) for m in third_call
+                  if m.get("role") == "tool"]
+    assert any("only once" in t or "best judgement" in t.lower()
+               for t in tool_texts)

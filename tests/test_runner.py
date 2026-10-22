@@ -204,3 +204,36 @@ def test_runner_loose_counts_value_present(tmp_path):
     assert report.loose_success_rate == 1.0
     assert report.per_question[0]["correct"] == [False]
     assert report.per_question[0]["loose"] == [True]
+
+
+def test_factory_wires_rag_retriever_and_context(tmp_path):
+    """H2: cfg.rag makes the factory pass a retriever to the tools and
+    inject pre-retrieved context into the system prompt."""
+    from analyst.db import load_olist
+    from analyst.rag.index import build_index
+    from evals.runner import make_agent_factory
+
+    src = tmp_path / "src.sqlite"
+    load_olist(str(FIXTURES), str(src))
+    idx = tmp_path / "idx.json"
+    build_index(str(Path(__file__).parent / "fixtures" / "docs"),
+                Database(str(src), str(tmp_path / "s.sqlite"), 200, 10),
+                str(idx))
+    cfg = AgentConfig(
+        model="m", base_url="u", api_key="k",
+        db_path=str(src), scratch_path=str(tmp_path / "s.sqlite"),
+        run_name="h2", rag=True, rag_index=str(idx),
+    )
+    factory = make_agent_factory(cfg)
+    agent = factory({"id": "q1", "question": "what counts as an active seller?"})
+    assert agent._tools._retriever is not None
+    assert "active seller" in agent._system_override
+    # and without rag, no retriever
+    cfg2 = AgentConfig(
+        model="m", base_url="u", api_key="k",
+        db_path=str(src), scratch_path=str(tmp_path / "s.sqlite"),
+        run_name="h1", rag=False,
+    )
+    agent2 = make_agent_factory(cfg2)({"id": "q1", "question": "hi?"})
+    assert agent2._tools._retriever is None
+    assert agent2._system_override is None

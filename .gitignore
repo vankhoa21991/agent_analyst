@@ -17,3 +17,4 @@ dist/
 
 # local notes about runs in progress
 docs/notes/*.tmp
+data/rag_index.json

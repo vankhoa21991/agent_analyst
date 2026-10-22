@@ -12,7 +12,8 @@ from datetime import date
 from analyst.config import AgentConfig
 from analyst.db import Database, QueryError
 from analyst.llm import LLMClient, ModelUnavailable
-from analyst.loop import Agent, AgentResult
+from analyst.loop import Agent, AgentResult, CLARIFY_RULE, SYSTEM_PROMPT
+from analyst.rag.search import Retriever
 from analyst.tools import ToolRegistry
 from analyst.tracing import Tracer
 from .grading import results_match, value_present
@@ -323,7 +324,12 @@ def make_agent_factory(
                     "e-commerce, 2017-2018)"
                 )
             return B0Agent(cfg, LLMClient(cfg), db, db_note=db_note)
-        tools = ToolRegistry(db, cfg)
+        # RAG is built for the configured (Olist) database; per-question
+        # benchmark DBs (Mini-Dev) use the benchmark prompt instead.
+        retriever = None
+        if cfg.rag and cfg.rag_index and not question.get("db_path"):
+            retriever = Retriever(cfg.rag_index)
+        tools = ToolRegistry(db, cfg, retriever=retriever)
         tracer = Tracer()
         stored = question.get("clarification_answer")
 
@@ -333,6 +339,19 @@ def make_agent_factory(
         system_prompt = None
         if question.get("db_path") and question.get("db_id"):
             system_prompt = benchmark_system_prompt(db, question["db_id"])
+        elif retriever is not None:
+            chunks = retriever.search(question["question"], k=5)
+            if chunks:
+                ctx = "\n".join(
+                    f"- [{c.source}] {c.text}" for c in chunks
+                )
+                base = SYSTEM_PROMPT + (CLARIFY_RULE if cfg.clarify else "")
+                system_prompt = (
+                    base
+                    + "\nRelevant context retrieved for this question "
+                      "(data dictionary + business definitions):\n"
+                    + ctx
+                )
         return Agent(
             cfg,
             LLMClient(cfg),

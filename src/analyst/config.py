@@ -52,6 +52,7 @@ class AgentConfig:
     row_limit: int = 200
     timeout_s: float = 10.0
     rag: bool = False
+    rag_index: str = ""
     sql_checks: bool = False
     clarify: bool = False
     run_name: str = "h1"

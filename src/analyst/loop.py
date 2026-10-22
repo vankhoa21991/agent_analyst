@@ -63,7 +63,7 @@ class AgentResult:
     prompt_tokens: int
     completion_tokens: int
     clarifications: int
-    stop_reason: str  # answered | max_steps | token_budget | model_unavailable | context_overflow
+    stop_reason: str  # answered | max_steps | token_budget | model_unavailable | context_overflow | sql_retry_limit
     sql_runs: int = 0
     sql_errors: int = 0
     write_sql: str | None = None
@@ -112,6 +112,7 @@ class Agent:
         clarifications = 0
         sql_runs = 0
         sql_errors = 0
+        sql_fail_streak = 0
         write_sql: str | None = None
         write_rows: int | None = None
         last_sql: str | None = None
@@ -183,15 +184,34 @@ class Agent:
                     return finish(reply.content or "", "answered")
 
                 for tc in reply.tool_calls:
-                    result = self._execute_tool_call(tc.name, tc.raw_arguments)
+                    if tc.name == "ask_user" and clarifications >= 1:
+                        result = ToolResult(
+                            "You already asked one clarifying question; "
+                            "you may ask only once per run. Proceed with "
+                            "your best judgement and state the assumption "
+                            "in your answer.",
+                            ok=False,
+                        )
+                    else:
+                        result = self._execute_tool_call(tc.name, tc.raw_arguments)
                     if tc.name == "ask_user" and result.ok:
                         clarifications += 1
                     if tc.name == "run_sql":
                         sql_runs += 1
                         if result.ok:
                             last_sql = json.loads(tc.raw_arguments).get("sql")
+                            sql_fail_streak = 0
                         else:
                             sql_errors += 1
+                            sql_fail_streak += 1
+                            if cfg.sql_checks and sql_fail_streak > 2:
+                                return finish(
+                                    f"Stopped: the query failed "
+                                    f"{sql_fail_streak} times in a row "
+                                    "(retry limit is 2). Last error: "
+                                    f"{result.text}",
+                                    "sql_retry_limit",
+                                )
                     if result.needs_approval:
                         approved = self._approve(result.pending_sql or "")
                         if approved:

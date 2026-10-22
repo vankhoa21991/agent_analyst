@@ -1,0 +1,17 @@
+# H2: H1 plus RAG schema/business-doc linking (search_docs tool +
+# pre-retrieved context in the system prompt).
+model: qwen3.8-27b
+base_url: http://localhost:8080/v1
+api_key: ${ANALYST_API_KEY}
+run_name: h2
+max_steps: 12
+max_total_tokens: 20000
+context_window: 32000
+db_path: data/olist.sqlite
+scratch_path: data/scratch.sqlite
+row_limit: 200
+timeout_s: 10
+rag: true
+rag_index: data/rag_index.json
+sql_checks: false
+clarify: false

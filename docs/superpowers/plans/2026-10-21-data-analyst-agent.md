@@ -246,10 +246,10 @@ tests/                     one test file per module
 **Interfaces:**
 - Consumes: `check_sql`, `explain`, `flag_result` (Task 3), already used by `ToolRegistry` when `cfg.sql_checks` is on (Task 4).
 
-- [ ] **Step 1: Write failing tests**: `test_retry_with_error_text_then_success` (fake model first sends SQL with an unknown column, then fixed SQL; second call happens and succeeds); `test_retry_limit_two` (a third failure ends with the error in the answer); `test_checks_off_means_no_explain` (the flag off, `explain` is never called).
-- [ ] **Step 2: Run** `uv run pytest tests/test_loop.py -v`. Expected: the new tests FAIL.
-- [ ] **Step 3: Implement** the retry policy in the loop.
-- [ ] **Step 4: Run** the tests. Expected: PASS.
+- [x] **Step 1: Write failing tests**: `test_retry_with_error_text_then_success` (fake model first sends SQL with an unknown column, then fixed SQL; second call happens and succeeds); `test_retry_limit_two` (a third failure ends with the error in the answer); `test_checks_off_means_no_explain` (the flag off, `explain` is never called).
+- [x] **Step 2: Run** `uv run pytest tests/test_loop.py -v`. Expected: the new tests FAIL.
+- [x] **Step 3: Implement** the retry policy in the loop.
+- [x] **Step 4: Run** the tests. Expected: PASS.
 - [ ] **Step 5: Run H3** (`configs/h3.yaml` is H2 plus `sql_checks: true`) on all suites; record SQL error rate next to H2.
 - [ ] **Step 6: Commit.**
 
@@ -262,10 +262,10 @@ tests/                     one test file per module
 **Interfaces:**
 - Consumes: `ToolRegistry` exposes `ask_user` only when `cfg.clarify` (Task 4); `Agent.ask_user` callback (Task 5).
 
-- [ ] **Step 1: Write failing tests**: `test_clarify_off_never_offers_ask_user_tool`; `test_clarify_on_passes_answer_back_into_messages` (scripted model calls `ask_user`, callback returns "net of refunds", next model call sees that text); `test_at_most_one_clarification_per_run_by_default`.
-- [ ] **Step 2: Run** `uv run pytest tests/test_loop.py -v`. Expected: the new tests FAIL.
-- [ ] **Step 3: Implement** the policy and prompt rule. For evals the callback is the benchmark's simulated user (BIRD-Interact) or, for the custom suite, a stored `clarification_answer` field on each ambiguous question; add that field to the ambiguous questions.
-- [ ] **Step 4: Run** the tests. Expected: PASS.
+- [x] **Step 1: Write failing tests**: `test_clarify_off_never_offers_ask_user_tool`; `test_clarify_on_passes_answer_back_into_messages` (scripted model calls `ask_user`, callback returns "net of refunds", next model call sees that text); `test_at_most_one_clarification_per_run_by_default`.
+- [x] **Step 2: Run** `uv run pytest tests/test_loop.py -v`. Expected: the new tests FAIL.
+- [x] **Step 3: Implement** the policy and prompt rule. For evals the callback is the benchmark's simulated user (BIRD-Interact) or, for the custom suite, a stored `clarification_answer` field on each ambiguous question; add that field to the ambiguous questions.
+- [x] **Step 4: Run** the tests. Expected: PASS.
 - [ ] **Step 5: Run H4** (`configs/h4.yaml` is H3 plus `clarify: true`). Report success rate on ambiguous questions separately, and clarifications per task.
 - [ ] **Step 6: Commit.**
 
