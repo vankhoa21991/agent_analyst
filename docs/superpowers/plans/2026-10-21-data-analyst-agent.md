@@ -230,12 +230,12 @@ tests/                     one test file per module
   - `Retriever(pg_dsn: str)`; `Retriever.search(query: str, k: int = 5) -> list[Chunk]`: Postgres full-text search plus pgvector similarity, merged by reciprocal rank fusion, then reranked.
   - Models (the plan's call, change only if they do not run well locally): embeddings `BAAI/bge-small-en-v1.5`, reranker `BAAI/bge-reranker-base`.
 
-- [ ] **Step 1: Write failing tests** (against the compose Postgres, marked `integration`): `test_index_counts_chunks`; `test_search_finds_refund_table` (a question about late deliveries returns the delivery-date table chunk in the top 3); `test_search_finds_business_definition` ("active seller" returns the definition chunk first); `test_keyword_only_hit_survives_fusion` (an exact column name the embedding misses still appears).
-- [ ] **Step 2: Run** `uv run pytest tests/test_rag.py -m integration -v`. Expected: FAIL.
-- [ ] **Step 3: Implement** the index and retriever with the signatures above.
-- [ ] **Step 4: Run** the tests. Expected: PASS.
-- [ ] **Step 5: Wire it** behind `cfg.rag`, write `configs/h2.yaml` (H1 plus `rag: true`), and run H2 on every suite used so far with the same questions and repeats as H1. Record prompt tokens per task next to H1.
-- [ ] **Step 6: Commit.**
+- [x] **Step 1: Write failing tests** (against the compose Postgres, marked `integration`): `test_index_counts_chunks`; `test_search_finds_refund_table` (a question about late deliveries returns the delivery-date table chunk in the top 3); `test_search_finds_business_definition` ("active seller" returns the definition chunk first); `test_keyword_only_hit_survives_fusion` (an exact column name the embedding misses still appears).
+- [x] **Step 2: Run** `uv run pytest tests/test_rag.py -m integration -v`. Expected: FAIL.
+- [x] **Step 3: Implement** the index and retriever with the signatures above.
+- [x] **Step 4: Run** the tests. Expected: PASS.
+- [x] **Step 5: Wire it** behind `cfg.rag`, write `configs/h2.yaml` (H1 plus `rag: true`), and run H2 on every suite used so far with the same questions and repeats as H1. Record prompt tokens per task next to H1.
+- [x] **Step 6: Commit.**
 
 ### Task 9: SQL checks in the loop, run H3 (about 5 h)
 

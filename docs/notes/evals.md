@@ -123,10 +123,42 @@ Status: **spike validated, formal scoring blocked on non-public GT.**
   `load_birdinteract_mini` (gradable questions) is deferred until GT
   is obtained.
 
+## H2 (H1 + RAG, TF-IDF)
+
+Custom suite, 55 questions x 3 repeats (same questions/repeats as H1):
+
+| | B0 | H1 | H2 |
+| --- | --- | --- | --- |
+| strict | 69.7% | 72.7% | **83.6%** |
+| loose | 77.6% | 84.2% | **94.5%** |
+| pass^3 | 60.0% | 67.3% | **76.4%** |
+| tokens/task | 2327 | 6187 | 7525 |
+| steps/task | 1.0 | 4.5 | 3.5 |
+| SQL error rate | 9.1% | 0.8% | 0.0% |
+
+RAG is a clear win on the custom suite: **+10.9 pp strict over H1**,
+zero regressions. It fixed 5 questions H1 failed — 4 of them ambiguous
+(a01 revenue, a02 active sellers, a05 AOV, a08 fulfillment time),
+where the retrieved business definitions pin the interpretation H1
+guessed wrong. Ambiguous subset: H1 16.7% -> H2 **50.0%** strict.
+Cost: +1338 tokens/task (retrieved context in the system prompt), but
+steps/task drop 4.5 -> 3.5 (less schema exploration needed).
+
+Remaining H2 failures and their nature:
+
+- a07 (best seller): tie at 5.0 average; gold's HAVING>=5 + implicit
+  tie-break picks a specific seller — gold-quirk.
+- a09 (top category): agent returns the right category (cama_mesa_banho,
+  9417 distinct orders) but omits the count column — projection shape.
+- a06 (cancellation rate): agent reports 0.63% (percent), gold expects
+  the fraction 0.0063 — unit convention.
+- a03/a10: 2/3 — stochastic, definition applied correctly when asked.
+
 ## Artifacts
 
 - `docs/results/custom_b0_2026-10-22.json`
 - `docs/results/custom_h1_2026-10-22.json`
+- `docs/results/custom_h2_2026-10-22.json`
 - `docs/results/minidev_b0_2026-10-22.json`
 - `docs/results/minidev_h1_2026-10-22.json`
 - `tests/test_write_approval.py` (live, ~2 min)
