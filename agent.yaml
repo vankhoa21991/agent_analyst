@@ -1,13 +1,16 @@
 # Agent configuration. Values of the form ${VAR} are expanded from the
 # environment (a .env file in the project root is loaded first, if present).
 model: qwen3.8-27b
-base_url: http://localhost:8080/v1
+# Overridable so the Docker UI can reach the host's llama-server
+# (e.g. ANALYST_BASE_URL=http://host.docker.internal:8080/v1).
+base_url: ${ANALYST_BASE_URL:-http://localhost:8080/v1}
 api_key: ${ANALYST_API_KEY}
 
-# loop budgets
-max_steps: 12
-max_total_tokens: 20000
-context_window: 32000   # hard stop; the model's real window is 131072
+# loop budgets (UI runs get more headroom than eval runs; the model's
+# real context window is 131072)
+max_steps: 16
+max_total_tokens: 40000
+context_window: 48000
 
 # data
 db_path: data/olist.sqlite
@@ -15,7 +18,9 @@ scratch_path: data/scratch.sqlite
 row_limit: 200
 timeout_s: 10
 
-# feature flags (each eval run flips exactly one)
-rag: false
-sql_checks: false
-clarify: false
+# feature flags (eval configs in configs/ flip these one at a time;
+# the UI runs the full harness)
+rag: true
+rag_index: data/rag_index.json
+sql_checks: true
+clarify: true

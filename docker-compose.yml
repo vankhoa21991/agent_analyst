@@ -1,15 +1,35 @@
 # Local services for the Data Analyst Agent.
 #
 # Task 4: Langfuse (tracing) and its database.
-# Task 11 adds: the Chainlit app and the agent Postgres (pgvector) on 5432.
+# Task 11: the Chainlit app (port 8000). RAG is in-process TF-IDF (see
+# docs/adr/0002-rag-without-postgres.md), so there is no agent Postgres.
 #
 #   docker compose up -d          # everything
 #   Langfuse UI: http://localhost:3000  (analyst@example.com / analyst)
+#   Analyst UI:  http://localhost:8000
 #
 # The project is auto-created on first boot with the dev keys below; the
 # agent reads the same keys from .env.
 
 services:
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on: [langfuse-web]
+    ports:
+      - 8000:8000
+    environment:
+      - ANALYST_API_KEY=${ANALYST_API_KEY:-unused}
+      # reach the host's llama-server from inside the container
+      - ANALYST_BASE_URL=${ANALYST_BASE_URL:-http://host.docker.internal:8080/v1}
+      - LANGFUSE_PUBLIC_KEY=pk-lf-analyst-dev
+      - LANGFUSE_SECRET_KEY=sk-lf-analyst-dev
+      - LANGFUSE_HOST=http://langfuse-web:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/app/data
+
   langfuse-web:
     image: docker.langfuse.com/langfuse/langfuse:4
     restart: always

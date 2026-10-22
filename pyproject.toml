@@ -7,6 +7,7 @@ dependencies = [
     "openai>=1.60",
     "pyyaml>=6",
     "langfuse>=3",
+    "chainlit>=2.12.0",
 ]
 
 [project.optional-dependencies]

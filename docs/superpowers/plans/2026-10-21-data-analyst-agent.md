@@ -279,11 +279,11 @@ tests/                     one test file per module
 - Consumes: `Agent` with `ask_user` and `approve` callbacks (Task 5).
 - Produces: a Chainlit app where `ask_user` posts a question message and waits for the reply, and `approve` shows the pending SQL with Approve and Reject buttons; answers show the SQL in a collapsible block.
 
-- [ ] **Step 1: Write failing smoke test** `test_app_module_builds_agent` (importing `analyst.ui.app` and calling its `build_agent()` returns an `Agent` using `agent.yaml`).
-- [ ] **Step 2: Run** `uv run pytest tests/test_ui_smoke.py -v`. Expected: FAIL.
-- [ ] **Step 3: Implement** the app and the Dockerfile; add the app and agent Postgres to compose; the app reaches llama-server on the host (`host.docker.internal`).
-- [ ] **Step 4: Run** the test (PASS). Then `docker compose up` from a clean checkout, ask three real questions, trigger one clarification and one approved write, and check each appears in Langfuse.
-- [ ] **Step 5: Commit.**
+- [x] **Step 1: Write failing smoke test** `test_app_module_builds_agent` (importing `analyst.ui.app` and calling its `build_agent()` returns an `Agent` using `agent.yaml`).
+- [x] **Step 2: Run** `uv run pytest tests/test_ui_smoke.py -v`. Expected: FAIL.
+- [x] **Step 3: Implement** the app and the Dockerfile; add the app and agent Postgres to compose; the app reaches llama-server on the host (`host.docker.internal`).
+- [x] (live E2E done; `docker compose up` + Langfuse parts blocked, no Docker — see docs/notes/ui.md) **Step 4: Run** the test (PASS). Then `docker compose up` from a clean checkout, ask three real questions, trigger one clarification and one approved write, and check each appears in Langfuse.
+- [x] **Step 5: Commit.**
 
 ### Task 12: README, results table, demo, final cleanup (about 6 h)
 

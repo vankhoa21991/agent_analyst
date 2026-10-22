@@ -9,7 +9,7 @@ from pathlib import Path
 
 import yaml
 
-_ENV_VAR = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
+_ENV_VAR = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}")
 
 
 def _find_dotenv(start: Path) -> Path | None:
@@ -35,7 +35,10 @@ def _load_dotenv(env_file: Path) -> None:
 
 def _expand(value) -> str:
     if isinstance(value, str):
-        return _ENV_VAR.sub(lambda m: os.environ.get(m.group(1), ""), value)
+        def sub(m: re.Match) -> str:
+            default = m.group(2)
+            return os.environ.get(m.group(1), default if default is not None else "")
+        return _ENV_VAR.sub(sub, value)
     return str(value)
 
 
