@@ -1,0 +1,1775 @@
+{
+  "suite": "custom",
+  "config_name": "h4",
+  "model": "qwen3.8-27b",
+  "date": "2026-10-22",
+  "per_question": [
+    {
+      "id": "r01",
+      "question": "How many orders are there in total?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **99,441 orders** in total (all order_id values are unique in the `orders` table).\n\n```sql\nSELECT COUNT(*) AS total_orders\nFROM orders;\n```",
+        "There are **99,441 orders** in total in the database (each `order_id` is unique, so the count of rows equals the count of distinct orders).\n\n```sql\nSELECT COUNT(*) AS total_orders\nFROM orders;\n```",
+        "There are 99,441 orders in total in the `orders` table.\n\n```sql\nSELECT COUNT(*) AS total_orders FROM orders\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS total_orders\nFROM orders",
+        "SELECT COUNT(*) AS total_orders\nFROM orders",
+        "SELECT COUNT(*) AS total_orders FROM orders"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r02",
+      "question": "How many orders were delivered?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "96,478 orders were delivered (order_status = 'delivered').\n\n```sql\nSELECT COUNT(*) AS delivered_orders\nFROM orders\nWHERE order_status = 'delivered'\n```",
+        "**96,478 orders** were delivered (i.e., have `order_status = 'delivered'`).\n\n```sql\nSELECT COUNT(*) AS delivered_orders\nFROM orders\nWHERE order_status = 'delivered'\n```",
+        "96,478 orders were delivered (order_status = 'delivered').\n\n```sql\nSELECT COUNT(*) AS delivered_orders\nFROM orders\nWHERE order_status = 'delivered';\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS delivered_orders\nFROM orders\nWHERE order_status = 'delivered'",
+        "SELECT COUNT(*) AS delivered_orders\nFROM orders\nWHERE order_status = 'delivered'",
+        "SELECT COUNT(*) AS delivered_orders\nFROM orders\nWHERE order_status = 'delivered'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r03",
+      "question": "How many distinct customer accounts placed at least one order?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "99,441 distinct customer accounts (customer_id) placed at least one order. This counts every order in the `orders` table regardless of status (delivered, canceled, etc.), since each row is an order that was placed.\n\n```sql\nSELECT COUNT(DISTINCT customer_id) AS distinct_customer_accounts\nFROM orders\n```",
+        "99,441 distinct customer accounts (customer_id) placed at least one order in the orders table.\n\n```sql\nSELECT COUNT(DISTINCT customer_id) FROM orders;\n```",
+        "**99,441** distinct customer accounts (customer_id) placed at least one order in the Olist database.\n\n```sql\nSELECT COUNT(DISTINCT customer_id) FROM orders\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(DISTINCT customer_id) AS distinct_customer_accounts\nFROM orders",
+        "SELECT COUNT(DISTINCT customer_id) FROM orders",
+        "SELECT COUNT(DISTINCT customer_id) FROM orders"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r04",
+      "question": "How many distinct people placed at least one order?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "**96,096 distinct people** placed at least one order.\n\nThis counts distinct `customer_unique_id` values (the natural-person identifier, per the data dictionary) across all orders — as opposed to 99,441 distinct `customer_id` account values, since some people hold multiple customer accounts.\n\n```sql\nSELECT COUNT(DISTINCT c.customer_unique_id)\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id;\n```",
+        "**96,096 distinct people** placed at least one order.\n\nI counted distinct `customer_unique_id` values (the natural-person identifier, per the data dictionary) across all orders, joined from `orders` to `customers`. This matches the distinct count of `customer_unique_id` in the `customers` table, since every customer account in that table has at least one order.\n\n```sql\nSELECT COUNT(DISTINCT c.customer_unique_id)\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id;\n```",
+        "**96,096** distinct people (unique natural persons, identified by `customer_unique_id`) placed at least one order in the dataset.\n\n```sql\nSELECT COUNT(DISTINCT c.customer_unique_id)\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(DISTINCT c.customer_unique_id)\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id",
+        "SELECT COUNT(DISTINCT c.customer_unique_id)\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id",
+        "SELECT COUNT(DISTINCT c.customer_unique_id)\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r05",
+      "question": "How many products are listed?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **32,951 products** listed in the catalog (all product_ids in the `products` table are unique).\n\n```sql\nSELECT COUNT(DISTINCT product_id) AS products_listed\nFROM products;\n```",
+        "There are **32,951 products** listed in the products table.\n\n```sql\nSELECT COUNT(*) AS product_count FROM products\n```",
+        "There are **32,951 products** listed in the `products` table (all with unique `product_id`s).\n\n```sql\nSELECT COUNT(*) AS product_count\nFROM products;\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(DISTINCT product_id) AS products_listed\nFROM products",
+        "SELECT COUNT(*) AS product_count FROM products",
+        "SELECT COUNT(*) AS product_count\nFROM products"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r06",
+      "question": "How many sellers are there?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **3,095 sellers** in the marketplace (distinct `seller_id` in the `sellers` table).\n\n```sql\nSELECT COUNT(DISTINCT seller_id) AS seller_count FROM sellers\n```",
+        "There are **3,095 sellers** in the sellers table (all seller_ids are unique).\n\n```sql\nSELECT COUNT(*) FROM sellers\n```",
+        "**Answer: There are 3,095 sellers.**\n\nThe `sellers` table contains 3,095 distinct sellers, and exactly the same 3,095 sellers appear in `order_items` (no sellers in orders are missing from the registry). So the count is 3,095 under any reasonable interpretation.\n\n```sql\nSELECT COUNT(DISTINCT seller_id)\nFROM sellers;\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(DISTINCT seller_id) AS seller_count FROM sellers",
+        "SELECT COUNT(*) FROM sellers",
+        "SELECT COUNT(DISTINCT seller_id)\nFROM sellers"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r07",
+      "question": "How many order items are there in total?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **112,650 order items** in total in the order_items table.\n\n```sql\nSELECT COUNT(*) AS total_order_items\nFROM order_items;\n```",
+        "There are **112,650** order items in total in the `order_items` table.\n\n```sql\nSELECT COUNT(*) AS total_order_items\nFROM order_items;\n```",
+        "There are **112,650** order items in total (one row per item in each order, across all orders).\n\n```sql\nSELECT COUNT(*) AS total_order_items\nFROM order_items;\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS total_order_items\nFROM order_items",
+        "SELECT COUNT(*) AS total_order_items\nFROM order_items",
+        "SELECT COUNT(*) AS total_order_items\nFROM order_items"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r08",
+      "question": "What is the total of all item prices, excluding freight?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The total of all item prices, excluding freight, is **R$ 13,591,643.70** (sum of `order_items.price` across all items in the database).\n\n```sql\nSELECT SUM(price) AS total_item_price\nFROM order_items;\n```",
+        "The total of all item prices, excluding freight, is **R$ 13,591,643.70** (sum of `order_items.price` across all 100,000+ item rows, i.e., goods only, no shipping).\n\n```sql\nSELECT SUM(price) AS total_item_prices\nFROM order_items;\n```",
+        "The total of all item prices in `order_items`, excluding freight, is **R$ 13,591,643.70** (sum of the `price` column across all item rows).\n\n```sql\nSELECT SUM(price) AS total_item_price FROM order_items\n```"
+      ],
+      "sqls": [
+        "SELECT SUM(price) AS total_item_price\nFROM order_items",
+        "SELECT SUM(price) AS total_item_prices\nFROM order_items",
+        "SELECT SUM(price) AS total_item_price FROM order_items"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r09",
+      "question": "What is the average price per order item?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The average price per order item is **R$ 120.65** (average of `order_items.price` across all 112,650 order items, excluding freight).\n\n```sql\nSELECT AVG(price) AS avg_price_per_item\nFROM order_items;\n```",
+        "The average price per order item is **R$ 120.65** (mean of `order_items.price`, excluding freight, across all 112,650 order items in the dataset).\n\n```sql\nSELECT AVG(price) AS avg_price_per_item\nFROM order_items;\n```",
+        "The average price per order item is **R$ 120.65** (average of `order_items.price`, the unit price excluding freight), based on 112,650 order items.\n\n```sql\nSELECT AVG(price) AS avg_price_per_order_item\nFROM order_items;\n```"
+      ],
+      "sqls": [
+        "SELECT AVG(price) AS avg_price_per_item\nFROM order_items",
+        "SELECT AVG(price) AS avg_price_per_item\nFROM order_items",
+        "SELECT AVG(price) AS avg_price_per_order_item\nFROM order_items"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r10",
+      "question": "How many orders were placed in 2018?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "54,011 orders were placed in 2018 (based on `order_purchase_timestamp`).\n\n```sql\nSELECT COUNT(*) AS orders_2018\nFROM orders\nWHERE order_purchase_timestamp LIKE '2018-%'\n```",
+        "54,011 orders were placed in 2018 (counting orders whose `order_purchase_timestamp` falls in calendar year 2018).\n\n```sql\nSELECT COUNT(*) AS orders_2018\nFROM orders\nWHERE order_purchase_timestamp >= '2018-01-01'\n  AND order_purchase_timestamp < '2019-01-01';\n```",
+        "54,011 orders were placed in 2018 (counting orders by their purchase timestamp).\n\n```sql\nSELECT COUNT(*)\nFROM orders\nWHERE strftime('%Y', order_purchase_timestamp) = '2018'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS orders_2018\nFROM orders\nWHERE order_purchase_timestamp LIKE '2018-%'",
+        "SELECT COUNT(*) AS orders_2018\nFROM orders\nWHERE order_purchase_timestamp >= '2018-01-01'\n  AND order_purchase_timestamp < '2019-01-01'",
+        "SELECT COUNT(*)\nFROM orders\nWHERE strftime('%Y', order_purchase_timestamp) = '2018'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r11",
+      "question": "Which year had the most orders?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false,
+        false,
+        false
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "**2018** had the most orders, with **54,011** orders (by purchase date), versus 45,101 in 2017 and 329 in 2016.\n\n```sql\nSELECT strftime('%Y', order_purchase_timestamp) AS year\nFROM orders\nGROUP BY year\nORDER BY COUNT(*) DESC\nLIMIT 1;\n```",
+        "2018 had the most orders, with 54,011 orders, compared to 45,101 in 2017 (and 329 in 2016).\n\n```sql\nSELECT strftime('%Y', order_purchase_timestamp) AS year\nFROM orders\nGROUP BY year\nORDER BY COUNT(*) DESC\nLIMIT 1\n```",
+        "2018 had the most orders: **54,011**, compared with 45,101 in 2017 and 329 in 2016 (based on `order_purchase_timestamp`).\n\n```sql\nSELECT strftime('%Y', order_purchase_timestamp) AS year\nFROM orders\nGROUP BY 1\nORDER BY COUNT(*) DESC\nLIMIT 1\n```"
+      ],
+      "sqls": [
+        "SELECT strftime('%Y', order_purchase_timestamp) AS year\nFROM orders\nGROUP BY year\nORDER BY COUNT(*) DESC\nLIMIT 1",
+        "SELECT strftime('%Y', order_purchase_timestamp) AS year\nFROM orders\nGROUP BY year\nORDER BY COUNT(*) DESC\nLIMIT 1",
+        "SELECT strftime('%Y', order_purchase_timestamp) AS year\nFROM orders\nGROUP BY 1\nORDER BY COUNT(*) DESC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r12",
+      "question": "Which five cities have the most customers?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        false
+      ],
+      "loose": [
+        true,
+        true,
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "The five cities with the most customers (counting customer accounts in the customers table) are:\n\n1. São Paulo — 15,540\n2. Rio de Janeiro — 6,882\n3. Belo Horizonte — 2,773\n4. Brasília — 2,131\n5. Curitiba — 1,521\n\n```sql\nSELECT customer_city, COUNT(customer_id) AS customer_count\nFROM customers\nGROUP BY customer_city\nORDER BY customer_count DESC, customer_city ASC\nLIMIT 5\n```",
+        "The five cities with the most customers (customer accounts in the customers table) are:\n\n1. sao paulo — 15,540\n2. rio de janeiro — 6,882\n3. belo horizonte — 2,773\n4. brasilia — 2,131\n5. curitiba — 1,521\n\n```sql\nSELECT customer_city, COUNT(customer_id) AS customers\nFROM customers\nGROUP BY customer_city\nORDER BY customers DESC, customer_city ASC\nLIMIT 5\n```",
+        "The five cities with the most customers (distinct people, by `customer_unique_id`) are:\n\n1. sao paulo — 14,984\n2. rio de janeiro — 6,620\n3. belo horizonte — 2,672\n4. brasilia — 2,069\n5. curitiba — 1,465\n\n```sql\nSELECT customer_city, COUNT(DISTINCT customer_unique_id) AS customers\nFROM customers\nGROUP BY customer_city\nORDER BY customers DESC, customer_city ASC\nLIMIT 5\n```"
+      ],
+      "sqls": [
+        "SELECT customer_city, COUNT(customer_id) AS customer_count\nFROM customers\nGROUP BY customer_city\nORDER BY customer_count DESC, customer_city ASC\nLIMIT 5",
+        "SELECT customer_city, COUNT(customer_id) AS customers\nFROM customers\nGROUP BY customer_city\nORDER BY customers DESC, customer_city ASC\nLIMIT 5",
+        "SELECT customer_city, COUNT(DISTINCT customer_unique_id) AS customers\nFROM customers\nGROUP BY customer_city\nORDER BY customers DESC, customer_city ASC\nLIMIT 5"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r13",
+      "question": "Which state has the most orders?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        false
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "SP (São Paulo) has the most orders, with 41,746 — far ahead of the runner-up RJ (12,852).\n\n```sql\nSELECT c.customer_state, COUNT(o.order_id) AS orders\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nGROUP BY c.customer_state\nORDER BY orders DESC\nLIMIT 1;\n```",
+        "São Paulo (SP) has the most orders, with 41,746 orders — far ahead of the runner-up Rio de Janeiro (RJ) at 12,852.\n\n```sql\nSELECT c.customer_state AS state, COUNT(o.order_id) AS orders\nFROM orders o\nJOIN customers c ON c.customer_id = o.customer_id\nGROUP BY c.customer_state\nORDER BY orders DESC\nLIMIT 1\n```",
+        "São Paulo (SP) has the most orders, with 41,746 orders — far ahead of the runner-up, Rio de Janeiro (RJ) with 12,852. This is based on customer location (customer_state) across all orders regardless of status.\n\n```sql\nSELECT c.customer_state\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nGROUP BY c.customer_state\nORDER BY COUNT(o.order_id) DESC\nLIMIT 1\n```"
+      ],
+      "sqls": [
+        "SELECT c.customer_state, COUNT(o.order_id) AS orders\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nGROUP BY c.customer_state\nORDER BY orders DESC\nLIMIT 1",
+        "SELECT c.customer_state AS state, COUNT(o.order_id) AS orders\nFROM orders o\nJOIN customers c ON c.customer_id = o.customer_id\nGROUP BY c.customer_state\nORDER BY orders DESC\nLIMIT 1",
+        "SELECT c.customer_state\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nGROUP BY c.customer_state\nORDER BY COUNT(o.order_id) DESC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r14",
+      "question": "What is the most common order status?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false,
+        false,
+        false
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "The most common order status is **delivered**, with 96,478 orders — far ahead of the next most common status, `shipped` (1,107).\n\n```sql\nSELECT order_status\nFROM orders\nGROUP BY order_status\nORDER BY COUNT(*) DESC\nLIMIT 1\n```",
+        "The most common order status is **`delivered`**, with 96,478 orders — the overwhelming majority of all ~99,341 orders. The next most common is `shipped` (1,107), followed by `canceled` (625) and `unavailable` (609).\n\n```sql\nSELECT order_status\nFROM orders\nGROUP BY order_status\nORDER BY COUNT(*) DESC\nLIMIT 1;\n```",
+        "The most common order status is **delivered**, with 96,478 orders — far ahead of the next most common status, `shipped` (1,107 orders).\n\n```sql\nSELECT order_status\nFROM orders\nGROUP BY order_status\nORDER BY COUNT(*) DESC\nLIMIT 1;\n```"
+      ],
+      "sqls": [
+        "SELECT order_status\nFROM orders\nGROUP BY order_status\nORDER BY COUNT(*) DESC\nLIMIT 1",
+        "SELECT order_status\nFROM orders\nGROUP BY order_status\nORDER BY COUNT(*) DESC\nLIMIT 1",
+        "SELECT order_status\nFROM orders\nGROUP BY order_status\nORDER BY COUNT(*) DESC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r15",
+      "question": "How many distinct orders included a credit card payment?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "**76,505 distinct orders** included at least one credit card payment (out of all orders in the dataset).\n\n```sql\nSELECT COUNT(DISTINCT order_id)\nFROM order_payments\nWHERE payment_type = 'credit_card'\n```",
+        "76,505 distinct orders included a credit card payment (orders where at least one payment row has `payment_type = 'credit_card'`).\n\n```sql\nSELECT COUNT(DISTINCT order_id)\nFROM order_payments\nWHERE payment_type = 'credit_card'\n```",
+        "76,505 distinct orders included at least one credit card payment (i.e., orders with a payment row where `payment_type = 'credit_card'` in `order_payments`).\n\n```sql\nSELECT COUNT(DISTINCT order_id)\nFROM order_payments\nWHERE payment_type = 'credit_card'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(DISTINCT order_id)\nFROM order_payments\nWHERE payment_type = 'credit_card'",
+        "SELECT COUNT(DISTINCT order_id)\nFROM order_payments\nWHERE payment_type = 'credit_card'",
+        "SELECT COUNT(DISTINCT order_id)\nFROM order_payments\nWHERE payment_type = 'credit_card'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r16",
+      "question": "What is the average number of installments for credit card payments?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The average number of installments for credit card payments is **3.51** (≈ 3.507, based on 76,795 credit card payment records in order_payments).\n\n```sql\nSELECT AVG(payment_installments)\nFROM order_payments\nWHERE payment_type = 'credit_card'\n```",
+        "The average number of installments for credit card payments is about **3.51** (3.507), computed over 76,795 credit card payment records.\n\n```sql\nSELECT AVG(payment_installments) AS avg_installments\nFROM order_payments\nWHERE payment_type = 'credit_card';\n```",
+        "The average number of installments for credit card payments is about **3.51** (≈ 3.507), computed over all 76,795 credit card payment records in `order_payments`.\n\n```sql\nSELECT AVG(payment_installments)\nFROM order_payments\nWHERE payment_type = 'credit_card'\n```"
+      ],
+      "sqls": [
+        "SELECT AVG(payment_installments)\nFROM order_payments\nWHERE payment_type = 'credit_card'",
+        "SELECT AVG(payment_installments) AS avg_installments\nFROM order_payments\nWHERE payment_type = 'credit_card'",
+        "SELECT AVG(payment_installments)\nFROM order_payments\nWHERE payment_type = 'credit_card'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r17",
+      "question": "What is the total amount paid via boleto?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false,
+        true,
+        true
+      ],
+      "loose": [
+        false,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "Total amount paid via boleto is **R$ 2,769,932.58** (19,191 boleto payment entries), counting only `delivered` orders per the project's default business definition. If canceled/other orders are included, the figure is R$ 2,869,361.27.\n\n```sql\nSELECT SUM(p.payment_value)\nFROM order_payments p\nJOIN orders o ON o.order_id = p.order_id\nWHERE p.payment_type = 'boleto'\n  AND o.order_status = 'delivered'\n```",
+        "The total amount paid via boleto is **R$ 2,869,361.27** (sum of payment_value across all boleto payment rows).\n\n```sql\nSELECT SUM(payment_value) AS total_boleto\nFROM order_payments\nWHERE payment_type = 'boleto';\n```",
+        "The total amount paid via boleto is **R$ 2,869,361.27** (sum of `payment_value` for all payments with `payment_type = 'boleto'`).\n\n```sql\nSELECT SUM(payment_value) AS total_boleto\nFROM order_payments\nWHERE payment_type = 'boleto'\n```"
+      ],
+      "sqls": [
+        "SELECT SUM(p.payment_value)\nFROM order_payments p\nJOIN orders o ON o.order_id = p.order_id\nWHERE p.payment_type = 'boleto'\n  AND o.order_status = 'delivered'",
+        "SELECT SUM(payment_value) AS total_boleto\nFROM order_payments\nWHERE payment_type = 'boleto'",
+        "SELECT SUM(payment_value) AS total_boleto\nFROM order_payments\nWHERE payment_type = 'boleto'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r18",
+      "question": "How many distinct orders have at least one review?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "98,673 distinct orders have at least one review (counting distinct `order_id` values in the `order_reviews` table).\n\n```sql\nSELECT COUNT(DISTINCT order_id) AS distinct_orders_with_review\nFROM order_reviews\n```",
+        "There are **98,673 distinct orders** that have at least one review (out of the ~100k total orders, most have exactly one review).\n\n```sql\nSELECT COUNT(DISTINCT order_id) FROM order_reviews;\n```",
+        "98,673 distinct orders have at least one review.\n\n```sql\nSELECT COUNT(DISTINCT order_id)\nFROM order_reviews;\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(DISTINCT order_id) AS distinct_orders_with_review\nFROM order_reviews",
+        "SELECT COUNT(DISTINCT order_id) FROM order_reviews",
+        "SELECT COUNT(DISTINCT order_id)\nFROM order_reviews"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r19",
+      "question": "What is the average review score?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The average review score is **4.09** (4.086), computed across all 99,224 reviews in `order_reviews`.\n\n```sql\nSELECT AVG(review_score) FROM order_reviews;\n```",
+        "The average review score is **4.09** (4.0864), computed over all 99,224 reviews in the `order_reviews` table (scores range from 1 to 5).\n\n```sql\nSELECT AVG(review_score) AS avg_review_score\nFROM order_reviews;\n```",
+        "The average review score across all reviews is **4.09** (4.0864), computed over 99,224 reviews in the order_reviews table.\n\n```sql\nSELECT AVG(review_score) AS avg_review_score\nFROM order_reviews;\n```"
+      ],
+      "sqls": [
+        "SELECT AVG(review_score) FROM order_reviews",
+        "SELECT AVG(review_score) AS avg_review_score\nFROM order_reviews",
+        "SELECT AVG(review_score) AS avg_review_score\nFROM order_reviews"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r20",
+      "question": "How many five-star reviews are there?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **57,328 five-star reviews** in the database (rows in `order_reviews` where `review_score = 5`).\n\n```sql\nSELECT COUNT(*) AS five_star_reviews\nFROM order_reviews\nWHERE review_score = 5;\n```",
+        "There are 57,328 five-star reviews (review_score = 5) in the order_reviews table.\n\n```sql\nSELECT COUNT(*) AS five_star_reviews\nFROM order_reviews\nWHERE review_score = 5;\n```",
+        "There are **57,328 five-star reviews** in the database (all reviews in `order_reviews` with `review_score = 5`).\n\n```sql\nSELECT COUNT(*) AS five_star_reviews\nFROM order_reviews\nWHERE review_score = 5;\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS five_star_reviews\nFROM order_reviews\nWHERE review_score = 5",
+        "SELECT COUNT(*) AS five_star_reviews\nFROM order_reviews\nWHERE review_score = 5",
+        "SELECT COUNT(*) AS five_star_reviews\nFROM order_reviews\nWHERE review_score = 5"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r21",
+      "question": "How many one-star reviews are there?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **11,424** one-star reviews in the database (rows in `order_reviews` with `review_score = 1`).\n\n```sql\nSELECT COUNT(*) AS one_star_reviews\nFROM order_reviews\nWHERE review_score = 1;\n```",
+        "There are 11,424 one-star reviews (review_score = 1) in the order_reviews table.\n\n```sql\nSELECT COUNT(*) AS one_star_reviews\nFROM order_reviews\nWHERE review_score = 1;\n```",
+        "There are **11,424** one-star reviews in the database (rows in `order_reviews` with `review_score = 1`).\n\n```sql\nSELECT COUNT(*) AS one_star_reviews\nFROM order_reviews\nWHERE review_score = 1;\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS one_star_reviews\nFROM order_reviews\nWHERE review_score = 1",
+        "SELECT COUNT(*) AS one_star_reviews\nFROM order_reviews\nWHERE review_score = 1",
+        "SELECT COUNT(*) AS one_star_reviews\nFROM order_reviews\nWHERE review_score = 1"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r22",
+      "question": "Which product category has the most products?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false,
+        false,
+        false
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "The category with the most products is **cama_mesa_banho** (bed, bath & table), with **3,029** product listings — ahead of esporte_lazer (sports & leisure) with 2,867 and moveis_decoracao (furniture & decor) with 2,657.\n\n```sql\nSELECT p.product_category_name,\n       t.product_category_name_english,\n       COUNT(DISTINCT p.product_id) AS product_count\nFROM products p\nLEFT JOIN product_category_name_translation t\n  ON p.product_category_name = t.product_category_name\nGROUP BY p.product_category_name, t.product_category_name_english\nORDER BY product_count DESC\nLIMIT 1;\n```",
+        "The product category with the most products is **cama_mesa_banho (bed_bath_table)**, with 3,029 product listings.\n\nFor reference, the top 5 categories by product count:\n1. cama_mesa_banho (bed_bath_table) — 3,029\n2. esporte_lazer (sports_leisure) — 2,867\n3. moveis_decoracao (furniture_decor) — 2,657\n4. beleza_saude (health_beauty) — 2,444\n5. utilidades_domesticas (housewares) — 2,335\n\n```sql\nSELECT p.product_category_name,\n       t.product_category_name_english,\n       COUNT(*) AS product_count\nFROM products p\nLEFT JOIN product_category_name_translation t\n  ON p.product_category_name = t.product_category_name\nGROUP BY p.product_category_name, t.product_category_name_english\nORDER BY product_count DESC\nLIMIT 1\n```",
+        "The category with the most products is **cama_mesa_banho** (bed, bath & table), with **3,029 products** — ahead of esporte_lazer (sports & leisure, 2,867) and moveis_decoracao (furniture & decor, 2,657).\n\n```sql\nSELECT p.product_category_name\nFROM products p\nGROUP BY p.product_category_name\nORDER BY COUNT(DISTINCT p.product_id) DESC\nLIMIT 1;\n```"
+      ],
+      "sqls": [
+        "SELECT p.product_category_name,\n       t.product_category_name_english,\n       COUNT(DISTINCT p.product_id) AS product_count\nFROM products p\nLEFT JOIN product_category_name_translation t\n  ON p.product_category_name = t.product_category_name\nGROUP BY p.product_category_name, t.product_category_name_english\nORDER BY product_count DESC\nLIMIT 1",
+        "SELECT p.product_category_name,\n       t.product_category_name_english,\n       COUNT(*) AS product_count\nFROM products p\nLEFT JOIN product_category_name_translation t\n  ON p.product_category_name = t.product_category_name\nGROUP BY p.product_category_name, t.product_category_name_english\nORDER BY product_count DESC\nLIMIT 1",
+        "SELECT p.product_category_name\nFROM products p\nGROUP BY p.product_category_name\nORDER BY COUNT(DISTINCT p.product_id) DESC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r23",
+      "question": "How many products are in the relogios_presentes category?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **1,329 products** in the `relogios_presentes` category (watches — gifts).\n\n```sql\nSELECT COUNT(*) AS product_count\nFROM products\nWHERE product_category_name = 'relogios_presentes';\n```",
+        "There are 1,329 products in the `relogios_presentes` category (watches/gifts, in the Portuguese category naming).\n\n```sql\nSELECT COUNT(*) AS product_count\nFROM products\nWHERE product_category_name = 'relogios_presentes'\n```",
+        "There are **1,329 products** in the `relogios_presentes` category.\n\n```sql\nSELECT COUNT(*) AS product_count\nFROM products\nWHERE product_category_name = 'relogios_presentes'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS product_count\nFROM products\nWHERE product_category_name = 'relogios_presentes'",
+        "SELECT COUNT(*) AS product_count\nFROM products\nWHERE product_category_name = 'relogios_presentes'",
+        "SELECT COUNT(*) AS product_count\nFROM products\nWHERE product_category_name = 'relogios_presentes'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r24",
+      "question": "What is the average product weight in grams?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The average product weight is **2,276.47 grams** (~2.28 kg), computed across 32,951 products in the `products` table (2 records with missing weight are excluded).\n\n```sql\nSELECT AVG(product_weight_g) AS avg_weight_g\nFROM products;\n```",
+        "The average product weight across all product listings is about **2,276.47 grams** (≈ 2.28 kg), computed over the 32,949 products in the `products` table that have a recorded weight (2 listings have NULL weights and are excluded from the average).\n\n```sql\nSELECT AVG(product_weight_g)\nFROM products\n```",
+        "The average product weight is about **2,276.47 grams** (across 32,949 products with a recorded weight; 2 of 32,951 listings have no weight data).\n\n```sql\nSELECT AVG(product_weight_g) AS avg_product_weight_g\nFROM products;\n```"
+      ],
+      "sqls": [
+        "SELECT AVG(product_weight_g) AS avg_weight_g\nFROM products",
+        "SELECT AVG(product_weight_g)\nFROM products",
+        "SELECT AVG(product_weight_g) AS avg_product_weight_g\nFROM products"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r25",
+      "question": "How many products have a missing photo count?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The `products` table has a `product_photos_qty` column (the photo count per product). Counting the rows where that field is NULL:\n\n**610 products** have a missing photo count.\n\n```sql\nSELECT COUNT(*) AS products_missing_photo_qty\nFROM products\nWHERE product_photos_qty IS NULL\n```",
+        "610 products have a missing photo count (`product_photos_qty` is NULL).\n\n```sql\nSELECT COUNT(*) AS missing_photo_count\nFROM products\nWHERE product_photos_qty IS NULL;\n```",
+        "610 products have a missing (NULL) photo count (`product_photos_qty`) in the products table.\n\n```sql\nSELECT COUNT(*) AS missing_photo_count\nFROM products\nWHERE product_photos_qty IS NULL;\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS products_missing_photo_qty\nFROM products\nWHERE product_photos_qty IS NULL",
+        "SELECT COUNT(*) AS missing_photo_count\nFROM products\nWHERE product_photos_qty IS NULL",
+        "SELECT COUNT(*) AS missing_photo_count\nFROM products\nWHERE product_photos_qty IS NULL"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r26",
+      "question": "Which state has the most sellers?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false,
+        false,
+        false
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "SP (São Paulo) has the most sellers, with 1,849 — far ahead of the runner-up PR (349).\n\n```sql\nSELECT seller_state\nFROM sellers\nGROUP BY seller_state\nORDER BY COUNT(*) DESC\nLIMIT 1;\n```",
+        "The state with the most sellers is **SP (São Paulo)**, with 1,849 sellers — far ahead of the runner-up, PR (349).\n\n```sql\nSELECT seller_state\nFROM sellers\nGROUP BY seller_state\nORDER BY COUNT(*) DESC\nLIMIT 1;\n```",
+        "The state with the most sellers is **SP (São Paulo)**, with 1,849 sellers — far ahead of the second place, PR (Paraná) with 349.\n\n```sql\nSELECT seller_state\nFROM sellers\nGROUP BY seller_state\nORDER BY COUNT(*) DESC\nLIMIT 1\n```"
+      ],
+      "sqls": [
+        "SELECT seller_state\nFROM sellers\nGROUP BY seller_state\nORDER BY COUNT(*) DESC\nLIMIT 1",
+        "SELECT seller_state\nFROM sellers\nGROUP BY seller_state\nORDER BY COUNT(*) DESC\nLIMIT 1",
+        "SELECT seller_state\nFROM sellers\nGROUP BY seller_state\nORDER BY COUNT(*) DESC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r27",
+      "question": "What is the average freight value per order item?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The average freight value per order item is **≈ R$ 19.99 BRL** (average of `freight_value` across all 112,650 order items).\n\n```sql\nSELECT AVG(freight_value) FROM order_items;\n```",
+        "The average freight (shipping) value per order item is **R$ 19.99 BRL**, computed across all 112,650 order items in the `order_items` table.\n\n```sql\nSELECT AVG(freight_value) FROM order_items\n```",
+        "The average freight value per order item is **R$ 19.99** (mean of `freight_value` across all 112,650 order items in the database).\n\n```sql\nSELECT AVG(freight_value) AS avg_freight_per_item\nFROM order_items;\n```"
+      ],
+      "sqls": [
+        "SELECT AVG(freight_value) FROM order_items",
+        "SELECT AVG(freight_value) FROM order_items",
+        "SELECT AVG(freight_value) AS avg_freight_per_item\nFROM order_items"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r28",
+      "question": "What is the total amount customers paid for delivered orders, including freight?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false,
+        false,
+        false
+      ],
+      "loose": [
+        false,
+        false,
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "Customers paid a total of **R$ 15,422,461.77** for delivered orders, including freight.\n\nThis is computed per the project's default revenue definition: the sum of `order_payments.payment_value` (the actual amount paid, which equals items + freight) across all orders with `order_status = 'delivered'`. As a cross-check, summing item price + freight from `order_items` for delivered orders gives R$ 15,419,773.75 — essentially the same figure, with the small difference attributable to rounding/partial payments.\n\n```sql\nSELECT SUM(p.payment_value) AS total_paid_incl_freight\nFROM order_payments p\nJOIN orders o ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered'\n```",
+        "The total amount customers paid for delivered orders, including freight, is **R$ 15,422,461.77** (Brazilian reais).\n\nThis uses the project's default revenue definition: the sum of `order_payments.payment_value` (the amount actually paid, which equals items + freight) over orders with status `delivered`.\n\n```sql\nSELECT SUM(p.payment_value) AS total_paid_incl_freight\nFROM order_payments p\nJOIN orders o ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered';\n```",
+        "Customers paid a total of **R$ 15,422,461.77** for delivered orders. This is the sum of `order_payments.payment_value` (the actual amount paid, which includes both goods and freight) for all orders with status `delivered`.\n\n```sql\nSELECT SUM(op.payment_value) AS total_paid\nFROM order_payments op\nJOIN orders o ON o.order_id = op.order_id\nWHERE o.order_status = 'delivered'\n```"
+      ],
+      "sqls": [
+        "SELECT SUM(p.payment_value) AS total_paid_incl_freight\nFROM order_payments p\nJOIN orders o ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered'",
+        "SELECT SUM(p.payment_value) AS total_paid_incl_freight\nFROM order_payments p\nJOIN orders o ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered'",
+        "SELECT SUM(op.payment_value) AS total_paid\nFROM order_payments op\nJOIN orders o ON o.order_id = op.order_id\nWHERE o.order_status = 'delivered'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r29",
+      "question": "How many delivered orders took more than 10 days from purchase to delivery?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "49,990 delivered orders took more than 10 days from purchase to delivery (order_delivered_customer_date minus order_purchase_timestamp > 10 days, among orders with status 'delivered').\n\n```sql\nSELECT COUNT(*) AS n_delivered_over_10_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL\n  AND order_purchase_timestamp IS NOT NULL\n  AND (julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp)) > 10\n```",
+        "49,990 delivered orders took more than 10 days from purchase to delivery (order_delivered_customer_date minus order_purchase_timestamp). That's about 51.8% of all 96,478 delivered orders in the dataset.\n\n```sql\nSELECT COUNT(*)\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL\n  AND julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp) > 10;\n```",
+        "**49,990** delivered orders took more than 10 days from purchase to delivery (i.e., `order_delivered_customer_date` minus `order_purchase_timestamp` > 10 days, among orders with status `delivered`).\n\n```sql\nSELECT COUNT(*) AS n_delivered_over_10_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL\n  AND julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp) > 10\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS n_delivered_over_10_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL\n  AND order_purchase_timestamp IS NOT NULL\n  AND (julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp)) > 10",
+        "SELECT COUNT(*)\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL\n  AND julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp) > 10",
+        "SELECT COUNT(*) AS n_delivered_over_10_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL\n  AND julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp) > 10"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r30",
+      "question": "How many orders contain more than one item?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "9,803 orders contain more than one item.\n\n```sql\nSELECT COUNT(*) AS multi_item_orders\nFROM (\n  SELECT order_id\n  FROM order_items\n  GROUP BY order_id\n  HAVING COUNT(*) > 1\n) sub\n```",
+        "9,803 orders contain more than one item (i.e., have 2 or more rows in order_items).\n\n```sql\nSELECT COUNT(*) AS multi_item_orders\nFROM (\n    SELECT order_id\n    FROM order_items\n    GROUP BY order_id\n    HAVING COUNT(*) > 1\n)\n```",
+        "9,803 orders contain more than one item (i.e., have 2 or more rows in `order_items`).\n\n```sql\nSELECT COUNT(*) AS orders_with_more_than_one_item\nFROM (\n    SELECT order_id\n    FROM order_items\n    GROUP BY order_id\n    HAVING COUNT(*) > 1\n)\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS multi_item_orders\nFROM (\n  SELECT order_id\n  FROM order_items\n  GROUP BY order_id\n  HAVING COUNT(*) > 1\n) sub",
+        "SELECT COUNT(*) AS multi_item_orders\nFROM (\n    SELECT order_id\n    FROM order_items\n    GROUP BY order_id\n    HAVING COUNT(*) > 1\n)",
+        "SELECT COUNT(*) AS orders_with_more_than_one_item\nFROM (\n    SELECT order_id\n    FROM order_items\n    GROUP BY order_id\n    HAVING COUNT(*) > 1\n)"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r31",
+      "question": "How many customers live in the city of sao paulo?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "**15,540 customers** live in the city of São Paulo (city `sao paulo`, state SP — the only state with that city name).\n\nNote: those 15,540 customer accounts correspond to 14,984 distinct people (`customer_unique_id`), since a few people hold more than one customer account.\n\n```sql\nSELECT COUNT(customer_id)\nFROM customers\nWHERE customer_city = 'sao paulo'\n  AND customer_state = 'SP';\n```",
+        "15,540 customer accounts live in the city of sao paulo (customer_city = 'sao paulo', state SP) in the customers table.\n\n```sql\nSELECT COUNT(customer_id) AS customers_in_sao_paulo\nFROM customers\nWHERE customer_city = 'sao paulo'\n```",
+        "There are **15,540 customers** with a home address in the city of sao paulo (SP), based on the `customers` table (one row per customer account).\n\n```sql\nSELECT COUNT(customer_id) AS customers_in_sao_paulo\nFROM customers\nWHERE customer_city = 'sao paulo'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(customer_id)\nFROM customers\nWHERE customer_city = 'sao paulo'\n  AND customer_state = 'SP'",
+        "SELECT COUNT(customer_id) AS customers_in_sao_paulo\nFROM customers\nWHERE customer_city = 'sao paulo'",
+        "SELECT COUNT(customer_id) AS customers_in_sao_paulo\nFROM customers\nWHERE customer_city = 'sao paulo'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r32",
+      "question": "What is the price of the most expensive single order item?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The most expensive single order item in the database costs **6,735.00 BRL** (unit price, excluding freight). It appears in order `0812eb902a67711a1cb742b3cdaa65ae` for product `489ae2aa008f021502940f251d4cce7f`, which also carried a freight charge of 194.31 BRL.\n\n```sql\nSELECT MAX(price) AS max_item_price\nFROM order_items;\n```",
+        "The most expensive single order item costs **R$ 6,735.00** (product `489ae2aa...` in order `0812eb90...`; its freight of R$ 194.31 is separate).\n\n```sql\nSELECT MAX(price) FROM order_items;\n```",
+        "The most expensive single order item in the Olist marketplace sold for **R$ 6,735.00** (the maximum `price` in `order_items`, excluding freight).\n\n```sql\nSELECT MAX(price) AS max_item_price\nFROM order_items;\n```"
+      ],
+      "sqls": [
+        "SELECT MAX(price) AS max_item_price\nFROM order_items",
+        "SELECT MAX(price) FROM order_items",
+        "SELECT MAX(price) AS max_item_price\nFROM order_items"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r33",
+      "question": "How many orders were estimated to be delivered in 2017?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "40,317 orders had an estimated delivery date in 2017 (based on `order_estimated_delivery_date`).\n\n```sql\nSELECT COUNT(*) AS order_count\nFROM orders\nWHERE strftime('%Y', order_estimated_delivery_date) = '2017'\n```",
+        "40,317 orders had an estimated (promised) delivery date in 2017.\n\n```sql\nSELECT COUNT(*) AS orders_estimated_2017\nFROM orders\nWHERE strftime('%Y', order_estimated_delivery_date) = '2017'\n```",
+        "40,317 orders had an estimated (promised) delivery date in 2017, based on `orders.order_estimated_delivery_date` falling between 2017-01-01 and 2017-12-31.\n\n```sql\nSELECT COUNT(*) AS n_orders_est_2017\nFROM orders\nWHERE order_estimated_delivery_date >= '2017-01-01'\n  AND order_estimated_delivery_date < '2018-01-01'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS order_count\nFROM orders\nWHERE strftime('%Y', order_estimated_delivery_date) = '2017'",
+        "SELECT COUNT(*) AS orders_estimated_2017\nFROM orders\nWHERE strftime('%Y', order_estimated_delivery_date) = '2017'",
+        "SELECT COUNT(*) AS n_orders_est_2017\nFROM orders\nWHERE order_estimated_delivery_date >= '2017-01-01'\n  AND order_estimated_delivery_date < '2018-01-01'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r34",
+      "question": "How many reviews were written in 2018?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "56,164 reviews were written in 2018, based on `review_creation_date`.\n\n```sql\nSELECT COUNT(*) AS reviews_2018\nFROM order_reviews\nWHERE review_creation_date >= '2018-01-01' AND review_creation_date < '2019-01-01'\n```",
+        "56,164 reviews were written in 2018 (based on `review_creation_date`).\n\n```sql\nSELECT COUNT(*)\nFROM order_reviews\nWHERE review_creation_date >= '2018-01-01'\n  AND review_creation_date < '2019-01-01'\n```",
+        "56,164 reviews were written in 2018 (based on `review_creation_date`).\n\n```sql\nSELECT COUNT(*) AS reviews_2018\nFROM order_reviews\nWHERE strftime('%Y', review_creation_date) = '2018'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS reviews_2018\nFROM order_reviews\nWHERE review_creation_date >= '2018-01-01' AND review_creation_date < '2019-01-01'",
+        "SELECT COUNT(*)\nFROM order_reviews\nWHERE review_creation_date >= '2018-01-01'\n  AND review_creation_date < '2019-01-01'",
+        "SELECT COUNT(*) AS reviews_2018\nFROM order_reviews\nWHERE strftime('%Y', review_creation_date) = '2018'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r35",
+      "question": "How many sellers are in the state of SP?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **1,849 sellers** located in the state of SP (São Paulo) in the sellers table.\n\n```sql\nSELECT COUNT(*) AS sp_sellers\nFROM sellers\nWHERE seller_state = 'SP';\n```",
+        "There are **1,849 sellers** located in the state of SP (São Paulo), according to the `sellers` table.\n\n```sql\nSELECT COUNT(*) AS sp_sellers\nFROM sellers\nWHERE seller_state = 'SP';\n```",
+        "There are **1,849 sellers** registered in the state of SP (São Paulo).\n\n```sql\nSELECT COUNT(*) AS sp_sellers\nFROM sellers\nWHERE seller_state = 'SP';\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS sp_sellers\nFROM sellers\nWHERE seller_state = 'SP'",
+        "SELECT COUNT(*) AS sp_sellers\nFROM sellers\nWHERE seller_state = 'SP'",
+        "SELECT COUNT(*) AS sp_sellers\nFROM sellers\nWHERE seller_state = 'SP'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r36",
+      "question": "What is the most common payment type?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false,
+        false,
+        false
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "The most common payment type is **credit_card**, with 76,795 payment records — far ahead of boleto (19,784), voucher (5,775), debit_card (1,529), and not_defined (3).\n\n```sql\nSELECT payment_type\nFROM order_payments\nGROUP BY payment_type\nORDER BY COUNT(*) DESC\nLIMIT 1;\n```",
+        "The most common payment type is **credit_card**, used in 76,795 payments — far ahead of boleto (19,784), voucher (5,775), debit_card (1,529), and not_defined (3).\n\n```sql\nSELECT payment_type\nFROM order_payments\nGROUP BY payment_type\nORDER BY COUNT(*) DESC\nLIMIT 1;\n```",
+        "The most common payment type is **credit_card**.\n\nAssumption: I counted by payment transactions (each row in `order_payments`, since `payment_type` is recorded at the payment level). Credit card leads with 76,795 of 103,886 transactions (~74%), far ahead of boleto (19,784), voucher (5,775), and debit_card (1,529). The result is robust to the alternative interpretation — counting distinct orders per payment type also puts credit_card first (76,505 orders).\n\n```sql\nSELECT payment_type\nFROM order_payments\nGROUP BY payment_type\nORDER BY COUNT(*) DESC\nLIMIT 1;\n```"
+      ],
+      "sqls": [
+        "SELECT payment_type\nFROM order_payments\nGROUP BY payment_type\nORDER BY COUNT(*) DESC\nLIMIT 1",
+        "SELECT payment_type\nFROM order_payments\nGROUP BY payment_type\nORDER BY COUNT(*) DESC\nLIMIT 1",
+        "SELECT payment_type\nFROM order_payments\nGROUP BY payment_type\nORDER BY COUNT(*) DESC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r37",
+      "question": "How many orders were canceled?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "625 orders were canceled (order_status = 'canceled' in the orders table).\n\n```sql\nSELECT COUNT(*) AS canceled_orders\nFROM orders\nWHERE order_status = 'canceled';\n```",
+        "There were **625 canceled orders** in the database (orders with `order_status = 'canceled'`).\n\n```sql\nSELECT COUNT(*) AS canceled_orders\nFROM orders\nWHERE order_status = 'canceled'\n```",
+        "625 orders were canceled (order_status = 'canceled' in the orders table).\n\n```sql\nSELECT COUNT(*) AS canceled_orders\nFROM orders\nWHERE order_status = 'canceled';\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS canceled_orders\nFROM orders\nWHERE order_status = 'canceled'",
+        "SELECT COUNT(*) AS canceled_orders\nFROM orders\nWHERE order_status = 'canceled'",
+        "SELECT COUNT(*) AS canceled_orders\nFROM orders\nWHERE order_status = 'canceled'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r38",
+      "question": "What is the average number of days from purchase to delivery for delivered orders?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Delivered orders took on average about 12.6 days from purchase to delivery (12.56 days, based on order_purchase_timestamp to order_delivered_customer_date for all orders with status \"delivered\").\n\n```sql\nSELECT AVG(julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp)) AS avg_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL;\n```",
+        "Delivered orders took on average about **12.56 days** from purchase to delivery (12.558 days, based on ~47,000+ delivered orders between 2017–2018).\n\n```sql\nSELECT AVG(julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp)) AS avg_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL;\n```",
+        "For the 96,470 delivered orders, the average time from purchase to delivery is about **12.56 days** (~12 days and 13 hours). This is computed as the mean of (order_delivered_customer_date − order_purchase_timestamp) over orders with status `delivered`.\n\n```sql\nSELECT AVG(julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp))\nFROM orders\nWHERE order_status = 'delivered';\n```"
+      ],
+      "sqls": [
+        "SELECT AVG(julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp)) AS avg_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL",
+        "SELECT AVG(julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp)) AS avg_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL",
+        "SELECT AVG(julianday(order_delivered_customer_date) - julianday(order_purchase_timestamp))\nFROM orders\nWHERE order_status = 'delivered'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r39",
+      "question": "How many distinct zip code prefixes are in the geolocation table?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The geolocation table contains **19,015 distinct zip code prefixes**. Note that the table has more rows than prefixes (multiple rows per prefix with slightly different lat/lng values), so the distinct count is 19,015 rather than the total row count.\n\n```sql\nSELECT COUNT(DISTINCT geolocation_zip_code_prefix) FROM geolocation;\n```",
+        "The geolocation table contains **19,015 distinct zip code prefixes**.\n\n```sql\nSELECT COUNT(DISTINCT geolocation_zip_code_prefix) FROM geolocation\n```",
+        "The geolocation table contains **19,015** distinct zip code prefixes.\n\n```sql\nSELECT COUNT(DISTINCT geolocation_zip_code_prefix) AS distinct_zip_prefixes\nFROM geolocation\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(DISTINCT geolocation_zip_code_prefix) FROM geolocation",
+        "SELECT COUNT(DISTINCT geolocation_zip_code_prefix) FROM geolocation",
+        "SELECT COUNT(DISTINCT geolocation_zip_code_prefix) AS distinct_zip_prefixes\nFROM geolocation"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "r40",
+      "question": "How many products have a description longer than 500 characters?",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "**18,892 products** have a description longer than 500 characters (based on the `product_description_lenght` field in the `products` table).\n\n```sql\nSELECT COUNT(*) \nFROM products\nWHERE product_description_lenght > 500\n```",
+        "18,892 products have a description longer than 500 characters (based on `products.product_description_lenght > 500`).\n\n```sql\nSELECT COUNT(*) AS product_count\nFROM products\nWHERE product_description_lenght > 500;\n```",
+        "**18,892 products** have a description longer than 500 characters (based on `products.product_description_lenght > 500`).\n\n```sql\nSELECT COUNT(*) FROM products WHERE product_description_lenght > 500\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) \nFROM products\nWHERE product_description_lenght > 500",
+        "SELECT COUNT(*) AS product_count\nFROM products\nWHERE product_description_lenght > 500",
+        "SELECT COUNT(*) FROM products WHERE product_description_lenght > 500"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a01",
+      "question": "What was the total revenue?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Total revenue was **R$ 15,422,461.77** — the sum of `order_payments.payment_value` (what was actually paid, including freight) across all orders with status `delivered`, per the project's default revenue definition.\n\n```sql\nSELECT ROUND(SUM(p.payment_value), 2) AS total_revenue\nFROM order_payments p\nJOIN orders o ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered'\n```",
+        "Total revenue (using the project default: sum of `order_payments.payment_value` for orders with status `delivered`) was **R$ 15,422,461.77**.\n\n```sql\nSELECT SUM(op.payment_value) AS total_revenue\nFROM order_payments op\nJOIN orders o ON o.order_id = op.order_id\nWHERE o.order_status = 'delivered';\n```",
+        "Total revenue was **R$ 15,422,461.77**, computed using the project's default revenue definition: the sum of `order_payments.payment_value` (amount actually paid) across all orders with status `delivered`.\n\n```sql\nSELECT SUM(p.payment_value) AS total_revenue\nFROM order_payments p\nJOIN orders o ON p.order_id = o.order_id\nWHERE o.order_status = 'delivered'\n```"
+      ],
+      "sqls": [
+        "SELECT ROUND(SUM(p.payment_value), 2) AS total_revenue\nFROM order_payments p\nJOIN orders o ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered'",
+        "SELECT SUM(op.payment_value) AS total_revenue\nFROM order_payments op\nJOIN orders o ON o.order_id = op.order_id\nWHERE o.order_status = 'delivered'",
+        "SELECT SUM(p.payment_value) AS total_revenue\nFROM order_payments p\nJOIN orders o ON p.order_id = o.order_id\nWHERE o.order_status = 'delivered'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a02",
+      "question": "How many active sellers are there?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        true,
+        false,
+        false
+      ],
+      "loose": [
+        true,
+        false,
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "**1,485 active sellers.**\n\nUsing the project's default definition: a seller is active if they have at least one order in the last 90 days, based on `orders.order_purchase_timestamp`, counting distinct `seller_id` from `order_items`. Since the dataset ends on 2018-10-17, the 90-day window is 2018-07-19 → 2018-10-17. Within that window, 1,485 distinct sellers had at least one order.\n\n```sql\nSELECT COUNT(DISTINCT oi.seller_id) AS active_sellers\nFROM order_items oi\nJOIN orders o ON o.order_id = oi.order_id\nWHERE o.order_purchase_timestamp >= (\n    SELECT datetime(MAX(order_purchase_timestamp), '-90 days') FROM orders\n  )\n  AND o.order_purchase_timestamp <= (\n    SELECT MAX(order_purchase_timestamp) FROM orders\n  );\n```",
+        "There are **1,495 active sellers**.\n\nUsing the project's default definition of \"active seller\" — sellers with at least one order in the last 90 days, based on `orders.order_purchase_timestamp`, counting distinct `seller_id` from `order_items`. Since the dataset is static (2017–2018), \"last 90 days\" is measured relative to the most recent order in the data (2018-10-17), i.e. orders purchased from 2018-07-19 onward.\n\n```sql\nSELECT COUNT(DISTINCT oi.seller_id) AS active_sellers\nFROM order_items oi\nJOIN orders o ON o.order_id = oi.order_id\nWHERE o.order_purchase_timestamp >= DATE((SELECT MAX(order_purchase_timestamp) FROM orders), '-90 days')\n```",
+        "There are **1,495 active sellers** — using the project's default definition (sellers with at least one order in the last 90 days, based on `orders.order_purchase_timestamp`, counting distinct `seller_id` from `order_items`). Since the dataset ends on 2018-10-17, \"last 90 days\" is measured back from the most recent order in the data (i.e., orders purchased on or after 2018-07-19).\n\n```sql\nSELECT COUNT(DISTINCT oi.seller_id) AS active_sellers\nFROM order_items oi\nJOIN orders o ON o.order_id = oi.order_id\nWHERE o.order_purchase_timestamp >= date((SELECT MAX(order_purchase_timestamp) FROM orders), '-90 days')\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(DISTINCT oi.seller_id) AS active_sellers\nFROM order_items oi\nJOIN orders o ON o.order_id = oi.order_id\nWHERE o.order_purchase_timestamp >= (\n    SELECT datetime(MAX(order_purchase_timestamp), '-90 days') FROM orders\n  )\n  AND o.order_purchase_timestamp <= (\n    SELECT MAX(order_purchase_timestamp) FROM orders\n  )",
+        "SELECT COUNT(DISTINCT oi.seller_id) AS active_sellers\nFROM order_items oi\nJOIN orders o ON o.order_id = oi.order_id\nWHERE o.order_purchase_timestamp >= DATE((SELECT MAX(order_purchase_timestamp) FROM orders), '-90 days')",
+        "SELECT COUNT(DISTINCT oi.seller_id) AS active_sellers\nFROM order_items oi\nJOIN orders o ON o.order_id = oi.order_id\nWHERE o.order_purchase_timestamp >= date((SELECT MAX(order_purchase_timestamp) FROM orders), '-90 days')"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a03",
+      "question": "How many late deliveries were there?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        false,
+        true,
+        false
+      ],
+      "loose": [
+        false,
+        true,
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "There were **6,535 late deliveries** — orders that were actually delivered where the customer received the package after the estimated (promised) delivery date.\n\n```sql\nSELECT COUNT(*) AS late_deliveries\nFROM orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND order_estimated_delivery_date IS NOT NULL\n  AND date(order_delivered_customer_date) > date(order_estimated_delivery_date)\n```",
+        "There were **7,826 late deliveries** — orders actually delivered after the customer's estimated delivery date (out of 96,478 delivered orders, ~8.1%).\n\n```sql\nSELECT COUNT(*) AS late_deliveries\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL\n  AND order_estimated_delivery_date IS NOT NULL\n  AND order_delivered_customer_date > order_estimated_delivery_date\n```",
+        "There were **7,827 late deliveries** in the Olist dataset.\n\nThis counts orders that were actually delivered (non-null `order_delivered_customer_date`) where the delivery to the customer happened after the estimated delivery date promised at purchase time — the project's default definition of \"late delivery.\"\n\n```sql\nSELECT COUNT(*) AS late_deliveries\nFROM orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND order_estimated_delivery_date IS NOT NULL\n  AND order_delivered_customer_date > order_estimated_delivery_date\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS late_deliveries\nFROM orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND order_estimated_delivery_date IS NOT NULL\n  AND date(order_delivered_customer_date) > date(order_estimated_delivery_date)",
+        "SELECT COUNT(*) AS late_deliveries\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_customer_date IS NOT NULL\n  AND order_estimated_delivery_date IS NOT NULL\n  AND order_delivered_customer_date > order_estimated_delivery_date",
+        "SELECT COUNT(*) AS late_deliveries\nFROM orders\nWHERE order_delivered_customer_date IS NOT NULL\n  AND order_estimated_delivery_date IS NOT NULL\n  AND order_delivered_customer_date > order_estimated_delivery_date"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a04",
+      "question": "How many repeat customers are there?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **2,997 repeat customers** — i.e., distinct `customer_unique_id`s (persons) with at least 2 orders of any status, per the project's default definition of \"repeat customer.\"\n\n```sql\nSELECT COUNT(*) AS repeat_customers\nFROM (\n  SELECT c.customer_unique_id\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n  HAVING COUNT(o.order_id) >= 2\n)\n```",
+        "There are **2,997 repeat customers**, using the project's default definition: a `customer_unique_id` (i.e., a person, not an account) who placed at least 2 orders of any status.\n\n```sql\nSELECT COUNT(*) AS repeat_customers\nFROM (\n  SELECT c.customer_unique_id\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n  HAVING COUNT(o.order_id) >= 2\n) t;\n```",
+        "There are **2,997 repeat customers** — i.e., 2,997 distinct `customer_unique_id`s (people, not accounts) with at least 2 orders of any status, per the project's default definition of \"repeat customer.\"\n\n```sql\nSELECT COUNT(*) AS repeat_customers\nFROM (\n  SELECT c.customer_unique_id\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n  HAVING COUNT(o.order_id) >= 2\n) t\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS repeat_customers\nFROM (\n  SELECT c.customer_unique_id\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n  HAVING COUNT(o.order_id) >= 2\n)",
+        "SELECT COUNT(*) AS repeat_customers\nFROM (\n  SELECT c.customer_unique_id\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n  HAVING COUNT(o.order_id) >= 2\n) t",
+        "SELECT COUNT(*) AS repeat_customers\nFROM (\n  SELECT c.customer_unique_id\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n  HAVING COUNT(o.order_id) >= 2\n) t"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a05",
+      "question": "What is the average order value?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The average order value is **R$ 159.86**.\n\nThis uses the project's default definition: revenue = sum of `order_payments.payment_value` (what customers actually paid, including freight), divided by the number of `delivered` orders.\n\n```sql\nSELECT SUM(p.payment_value) / COUNT(DISTINCT o.order_id) AS aov\nFROM orders o\nJOIN order_payments p ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered';\n```",
+        "The average order value is approximately **R$ 159.86**.\n\nThis uses the project's default definition: revenue = sum of `order_payments.payment_value` (what was actually paid, goods + freight), divided by the number of `delivered` orders only (canceled and other non-delivered orders are excluded from the denominator).\n\n```sql\nSELECT SUM(op.payment_value) / COUNT(DISTINCT o.order_id) AS average_order_value\nFROM orders o\nJOIN order_payments op ON o.order_id = op.order_id\nWHERE o.order_status = 'delivered'\n```",
+        "**Average order value: R$ 159.86**\n\nPer the project's default definition, AOV = revenue per delivered order, where revenue is the sum of `order_payments.payment_value` (what was actually paid, items + freight). That gives 96,477 delivered orders with total revenue of R$ 15,422,461.77 → 15,422,461.77 / 96,477 ≈ **R$ 159.86 per order**.\n\n```sql\nSELECT SUM(p.payment_value) / COUNT(DISTINCT o.order_id) AS average_order_value\nFROM orders o\nJOIN order_payments p ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered';\n```"
+      ],
+      "sqls": [
+        "SELECT SUM(p.payment_value) / COUNT(DISTINCT o.order_id) AS aov\nFROM orders o\nJOIN order_payments p ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered'",
+        "SELECT SUM(op.payment_value) / COUNT(DISTINCT o.order_id) AS average_order_value\nFROM orders o\nJOIN order_payments op ON o.order_id = op.order_id\nWHERE o.order_status = 'delivered'",
+        "SELECT SUM(p.payment_value) / COUNT(DISTINCT o.order_id) AS average_order_value\nFROM orders o\nJOIN order_payments p ON o.order_id = p.order_id\nWHERE o.order_status = 'delivered'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a06",
+      "question": "What is the cancellation rate?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        true,
+        false,
+        false
+      ],
+      "loose": [
+        true,
+        false,
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "The cancellation rate is **625 canceled orders out of 99,441 total orders = 0.63%** (0.0063), using the project default definition (canceled orders ÷ all orders).\n\n```sql\nSELECT\n  1.0 * SUM(CASE WHEN order_status = 'canceled' THEN 1 ELSE 0 END) / COUNT(*) AS cancellation_rate\nFROM orders\n```",
+        "The cancellation rate is **0.63%** — 625 canceled orders out of 99,441 total orders (default definition: canceled ÷ all orders).\n\n```sql\nSELECT ROUND(100.0 * SUM(CASE WHEN order_status = 'canceled' THEN 1 ELSE 0 END) / COUNT(*), 2) AS cancellation_rate_pct\nFROM orders;\n```",
+        "The cancellation rate is **0.63%** — 625 canceled orders out of 99,441 total orders (using the project default definition: canceled orders ÷ all orders).\n\n```sql\nSELECT ROUND(100.0 * SUM(CASE WHEN order_status = 'canceled' THEN 1 ELSE 0 END) / COUNT(*), 2) AS cancellation_rate_pct\nFROM orders\n```"
+      ],
+      "sqls": [
+        "SELECT\n  1.0 * SUM(CASE WHEN order_status = 'canceled' THEN 1 ELSE 0 END) / COUNT(*) AS cancellation_rate\nFROM orders",
+        "SELECT ROUND(100.0 * SUM(CASE WHEN order_status = 'canceled' THEN 1 ELSE 0 END) / COUNT(*), 2) AS cancellation_rate_pct\nFROM orders",
+        "SELECT ROUND(100.0 * SUM(CASE WHEN order_status = 'canceled' THEN 1 ELSE 0 END) / COUNT(*), 2) AS cancellation_rate_pct\nFROM orders"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a07",
+      "question": "Which seller has the best rating?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        false,
+        false,
+        false
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "Using the project's default definition of seller rating (average `review_score` across all reviews on the seller's items, requiring at least 5 reviews), the best-rated seller is **48efc9d94a9834137efd9ea76b065a38** (Curitiba, PR), with a perfect **5.0 average across 34 reviews** — the most reviews of any seller with a perfect score. (Several other sellers also average 5.0, but with fewer reviews: e.g., a08692680c77d30a0b4280da5df01c5a at 17, 0b36063d5818f81ccb94b54adfaebbf5 at 15.)\n\n```sql\nSELECT oi.seller_id,\n       AVG(r.review_score) AS avg_score,\n       COUNT(*) AS n_reviews\nFROM order_items oi\nJOIN order_reviews r ON oi.order_id = r.order_id\nGROUP BY oi.seller_id\nHAVING COUNT(*) >= 5\nORDER BY avg_score DESC, n_reviews DESC\nLIMIT 1\n```",
+        "Using the project's default seller-rating definition (average review score over all reviews of the seller's items, sellers with at least 5 reviews), the best-rated seller is:\n\n**Seller `48efc9d94a9834137efd9ea76b065a38`** (Curitiba, PR) — perfect 5.0 average rating across 34 reviews.\n\nSeveral sellers also have a 5.0 average (e.g., `a08692680c77d30a0b4280da5df01c5a` in São Paulo, 17 reviews), but the Curitiba seller has the most reviews among the 5.0-rated sellers, making it the safest pick.\n\n```sql\nSELECT oi.seller_id,\n       s.seller_city,\n       s.seller_state,\n       AVG(orr.review_score) AS rating,\n       COUNT(orr.review_id)  AS n_reviews\nFROM order_items oi\nJOIN order_reviews orr ON orr.order_id = oi.order_id\nJOIN sellers s ON s.seller_id = oi.seller_id\nGROUP BY oi.seller_id, s.seller_city, s.seller_state\nHAVING COUNT(orr.review_id) >= 5\nORDER BY rating DESC, n_reviews DESC\nLIMIT 1;\n```",
+        "**Seller `48efc9d94a9834137efd9ea76b065a38` (Curitiba, PR) has the best rating.**\n\nUsing the project's default definition — average `review_score` over all reviews of a seller's items, requiring at least 5 reviews — this seller has a perfect **5.0 average across 34 reviews**. Several other sellers also average 5.0 (e.g., `a0869268...` with 17 reviews), but this one is the most-reviewed among the perfect scorers, making it the clear top.\n\n```sql\nSELECT oi.seller_id,\n       AVG(orr.review_score) AS avg_score,\n       COUNT(*) AS n_reviews\nFROM order_items oi\nJOIN order_reviews orr ON oi.order_id = orr.order_id\nGROUP BY oi.seller_id\nHAVING COUNT(*) >= 5\nORDER BY avg_score DESC, n_reviews DESC\nLIMIT 1;\n```"
+      ],
+      "sqls": [
+        "SELECT oi.seller_id,\n       AVG(r.review_score) AS avg_score,\n       COUNT(*) AS n_reviews\nFROM order_items oi\nJOIN order_reviews r ON oi.order_id = r.order_id\nGROUP BY oi.seller_id\nHAVING COUNT(*) >= 5\nORDER BY avg_score DESC, n_reviews DESC\nLIMIT 1",
+        "SELECT oi.seller_id,\n       s.seller_city,\n       s.seller_state,\n       AVG(orr.review_score) AS rating,\n       COUNT(orr.review_id)  AS n_reviews\nFROM order_items oi\nJOIN order_reviews orr ON orr.order_id = oi.order_id\nJOIN sellers s ON s.seller_id = oi.seller_id\nGROUP BY oi.seller_id, s.seller_city, s.seller_state\nHAVING COUNT(orr.review_id) >= 5\nORDER BY rating DESC, n_reviews DESC\nLIMIT 1",
+        "SELECT oi.seller_id,\n       AVG(orr.review_score) AS avg_score,\n       COUNT(*) AS n_reviews\nFROM order_items oi\nJOIN order_reviews orr ON oi.order_id = orr.order_id\nGROUP BY oi.seller_id\nHAVING COUNT(*) >= 5\nORDER BY avg_score DESC, n_reviews DESC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a08",
+      "question": "What is the average fulfillment time?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        false,
+        true,
+        true
+      ],
+      "loose": [
+        false,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "The average fulfillment time is **3.23 days** (per the project's default definition: time from purchase to handoff to the carrier, `order_delivered_carrier_date` − `order_purchase_timestamp`, over delivered orders — 96,476 orders).\n\n```sql\nSELECT ROUND(AVG(julianday(order_delivered_carrier_date) - julianday(order_purchase_timestamp)), 2) AS avg_fulfillment_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_carrier_date IS NOT NULL\n  AND order_purchase_timestamp IS NOT NULL\n```",
+        "The average fulfillment time — using the project default of `order_delivered_carrier_date − order_purchase_timestamp` over delivered orders — is about **3.23 days (~77.5 hours)**, based on 96,476 delivered orders.\n\n```sql\nSELECT AVG(julianday(order_delivered_carrier_date) - julianday(order_purchase_timestamp)) AS avg_fulfillment_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_carrier_date IS NOT NULL\n  AND order_purchase_timestamp IS NOT NULL;\n```",
+        "The average fulfillment time is about **3.23 days** (~77.5 hours).\n\nPer the project's default definition, fulfillment time = `order_delivered_carrier_date` − `order_purchase_timestamp` (time until the carrier gets the package), averaged over delivered orders. That covers 96,476 delivered orders with both timestamps present.\n\n```sql\nSELECT AVG((julianday(order_delivered_carrier_date) - julianday(order_purchase_timestamp))) AS avg_fulfillment_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_carrier_date IS NOT NULL\n  AND order_purchase_timestamp IS NOT NULL\n```"
+      ],
+      "sqls": [
+        "SELECT ROUND(AVG(julianday(order_delivered_carrier_date) - julianday(order_purchase_timestamp)), 2) AS avg_fulfillment_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_carrier_date IS NOT NULL\n  AND order_purchase_timestamp IS NOT NULL",
+        "SELECT AVG(julianday(order_delivered_carrier_date) - julianday(order_purchase_timestamp)) AS avg_fulfillment_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_carrier_date IS NOT NULL\n  AND order_purchase_timestamp IS NOT NULL",
+        "SELECT AVG((julianday(order_delivered_carrier_date) - julianday(order_purchase_timestamp))) AS avg_fulfillment_days\nFROM orders\nWHERE order_status = 'delivered'\n  AND order_delivered_carrier_date IS NOT NULL\n  AND order_purchase_timestamp IS NOT NULL"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a09",
+      "question": "What is the top product category?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        false,
+        false,
+        false
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "The top product category is **cama_mesa_banho** (Bed, Bath & Table), with 9,417 distinct orders — the most of any category. It edges out beleza_saude (Health & Beauty, 8,836 orders) and esporte_lazer (Sports & Leisure, 7,720 orders).\n\n```sql\nSELECT p.product_category_name\nFROM order_items oi\nJOIN products p ON oi.product_id = p.product_id\nGROUP BY p.product_category_name\nORDER BY COUNT(DISTINCT oi.order_id) DESC\nLIMIT 1\n```",
+        "The top product category is **cama_mesa_banho** (English: **bed_bath_table** — beds, tables & bathroom/home furnishings), with 9,417 distinct orders, the highest of any category. For context, the runners-up are beleza_saude (beauty & health, 8,836) and esporte_lazer (sports & leisure, 7,720).\n\nThis uses the project's default definition of \"top category\": the category appearing in the most distinct orders.\n\n```sql\nSELECT p.product_category_name\nFROM order_items oi\nJOIN products p ON oi.product_id = p.product_id\nGROUP BY p.product_category_name\nORDER BY COUNT(DISTINCT oi.order_id) DESC\nLIMIT 1\n```",
+        "The top product category is **cama_mesa_banho** (English: bed_bath_table), with 9,417 distinct orders — ahead of beleza_saude (health_beauty, 8,836 orders) and esporte_lazer (sports_leisure, 7,720 orders).\n\n```sql\nSELECT p.product_category_name,\n       t.product_category_name_english,\n       COUNT(DISTINCT oi.order_id) AS orders\nFROM order_items oi\nJOIN products p ON p.product_id = oi.product_id\nLEFT JOIN product_category_name_translation t\n       ON t.product_category_name = p.product_category_name\nGROUP BY p.product_category_name, t.product_category_name_english\nORDER BY orders DESC, p.product_category_name\nLIMIT 1;\n```"
+      ],
+      "sqls": [
+        "SELECT p.product_category_name\nFROM order_items oi\nJOIN products p ON oi.product_id = p.product_id\nGROUP BY p.product_category_name\nORDER BY COUNT(DISTINCT oi.order_id) DESC\nLIMIT 1",
+        "SELECT p.product_category_name\nFROM order_items oi\nJOIN products p ON oi.product_id = p.product_id\nGROUP BY p.product_category_name\nORDER BY COUNT(DISTINCT oi.order_id) DESC\nLIMIT 1",
+        "SELECT p.product_category_name,\n       t.product_category_name_english,\n       COUNT(DISTINCT oi.order_id) AS orders\nFROM order_items oi\nJOIN products p ON p.product_id = oi.product_id\nLEFT JOIN product_category_name_translation t\n       ON t.product_category_name = p.product_category_name\nGROUP BY p.product_category_name, t.product_category_name_english\nORDER BY orders DESC, p.product_category_name\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "a10",
+      "question": "How many new customers were there in 2018?",
+      "ambiguous": true,
+      "write": false,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There were **52,062 new customers** in 2018 — i.e., customers (by `customer_unique_id`) whose first-ever order was placed in 2018, per the project's default definition of \"new customer.\"\n\n```sql\nSELECT COUNT(*) AS new_customers_2018\nFROM (\n  SELECT c.customer_unique_id, MIN(o.order_purchase_timestamp) AS first_order\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n) t\nWHERE first_order >= '2018-01-01' AND first_order < '2019-01-01'\n```",
+        "There were **52,062 new customers** in 2018, defined (per the project default) as customers whose first-ever order was placed in 2018.\n\n```sql\nSELECT COUNT(*) AS new_customers_2018\nFROM (\n  SELECT c.customer_unique_id, MIN(o.order_purchase_timestamp) AS first_order\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n) t\nWHERE first_order >= '2018-01-01' AND first_order < '2019-01-01'\n```",
+        "**52,062 new customers in 2018.**\n\nUsing the project's default definition — a `customer_unique_id` whose first-ever order (by `order_purchase_timestamp`, across all of that person's accounts) was placed in calendar year 2018 — 52,062 distinct people placed their first order in 2018.\n\n```sql\nSELECT COUNT(*) AS new_customers_2018\nFROM (\n  SELECT c.customer_unique_id,\n         MIN(o.order_purchase_timestamp) AS first_order\n  FROM orders o\n  JOIN customers c ON c.customer_id = o.customer_id\n  GROUP BY c.customer_unique_id\n) t\nWHERE first_order >= '2018-01-01 00:00:00'\n  AND first_order < '2019-01-01 00:00:00'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) AS new_customers_2018\nFROM (\n  SELECT c.customer_unique_id, MIN(o.order_purchase_timestamp) AS first_order\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n) t\nWHERE first_order >= '2018-01-01' AND first_order < '2019-01-01'",
+        "SELECT COUNT(*) AS new_customers_2018\nFROM (\n  SELECT c.customer_unique_id, MIN(o.order_purchase_timestamp) AS first_order\n  FROM orders o\n  JOIN customers c ON o.customer_id = c.customer_id\n  GROUP BY c.customer_unique_id\n) t\nWHERE first_order >= '2018-01-01' AND first_order < '2019-01-01'",
+        "SELECT COUNT(*) AS new_customers_2018\nFROM (\n  SELECT c.customer_unique_id,\n         MIN(o.order_purchase_timestamp) AS first_order\n  FROM orders o\n  JOIN customers c ON c.customer_id = o.customer_id\n  GROUP BY c.customer_unique_id\n) t\nWHERE first_order >= '2018-01-01 00:00:00'\n  AND first_order < '2019-01-01 00:00:00'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "w01",
+      "question": "Five orders are stuck in created status. Mark them as approved.",
+      "ambiguous": false,
+      "write": true,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Done. The 5 orders that were stuck in `created` status have been marked as `approved`.\n\n- The update ran on the scratch copy of the database after your approval: **5 rows changed**.\n- Note: read-only queries against the original database still show the pre-change state (5 `created`, 2 `approved`), since the write was applied only to the scratch copy.\n\nThe five affected orders were: `b5359909123fa03c50bdb0cfed07f098`, `dba5062fbda3af4fb6c33b1e040ca38f`, `7a4df5d8cff4090e541401a20a22bb80`, `35de4050331c6c644cddc86f4f2d0d64`, `90ab3e7d52544ec7bc3363c82689965f`.\n\n```sql\nUPDATE orders SET order_status = 'approved' WHERE order_status = 'created'\n```",
+        "Done. All 5 orders stuck in `created` status were updated to `approved` (5 rows changed on the scratch database).\n\n```sql\nUPDATE orders SET order_status = 'approved' WHERE order_status = 'created'\n```",
+        "Done. The 5 stuck orders (b5359909123fa03c50bdb0cfed07f098, dba5062fbda3af4fb6c33b1e040ca38f, 7a4df5d8cff4090e541401a20a22bb80, 35de4050331c6c644cddc86f4f2d0d64, 90ab3e7d52544ec7bc3363c82689965f) were marked as `approved` — 5 rows changed on the scratch database after your approval.\n\n```sql\nUPDATE orders SET order_status = 'approved' WHERE order_status = 'created'\n```"
+      ],
+      "sqls": [
+        "UPDATE orders SET order_status = 'approved' WHERE order_status = 'created'",
+        "UPDATE orders SET order_status = 'approved' WHERE order_status = 'created'",
+        "UPDATE orders SET order_status = 'approved' WHERE order_status = 'created'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "w02",
+      "question": "Some delivered orders are missing their approval timestamp. Backfill order_approved_at from order_purchase_timestamp for delivered orders where it is missing.",
+      "ambiguous": false,
+      "write": true,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Backfill complete: 14 delivered orders had a missing `order_approved_at` and were updated to use `order_purchase_timestamp` as the approval time. All 14 affected rows had a purchase timestamp, so no values were left NULL. The change was applied on the scratch copy of the database after your approval.\n\n```sql\nUPDATE orders\nSET order_approved_at = order_purchase_timestamp\nWHERE order_status = 'delivered'\n  AND order_approved_at IS NULL\n```",
+        "Done. Backfilled `order_approved_at` with `order_purchase_timestamp` for the 14 delivered orders that were missing it (no other delivered orders were affected, and all 14 had a valid purchase timestamp). The change was approved and executed on the scratch database: 14 rows changed.\n\n```sql\nUPDATE orders\nSET order_approved_at = order_purchase_timestamp\nWHERE order_status = 'delivered'\n  AND order_approved_at IS NULL\n```",
+        "The backfill is done. Summary:\n\n- Scope: orders with `order_status = 'delivered'` and `order_approved_at IS NULL` — 14 orders, all of which had a non-null `order_purchase_timestamp`.\n- Action: set `order_approved_at = order_purchase_timestamp` for those 14 rows. The write was approved and executed on the scratch database (14 rows changed). The main database is untouched, so a read-only check there still shows the original 14 missing values.\n\n```sql\nUPDATE orders\nSET order_approved_at = order_purchase_timestamp\nWHERE order_status = 'delivered'\n  AND order_approved_at IS NULL\n```"
+      ],
+      "sqls": [
+        "UPDATE orders\nSET order_approved_at = order_purchase_timestamp\nWHERE order_status = 'delivered'\n  AND order_approved_at IS NULL",
+        "UPDATE orders\nSET order_approved_at = order_purchase_timestamp\nWHERE order_status = 'delivered'\n  AND order_approved_at IS NULL",
+        "UPDATE orders\nSET order_approved_at = order_purchase_timestamp\nWHERE order_status = 'delivered'\n  AND order_approved_at IS NULL"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "w03",
+      "question": "The translation table is missing entries for the pc_gamer and portateis_cozinha_e_preparadores_de_alimentos categories. Add them with the English names pc_gamer and portable_kitchen_and_food_preparers.",
+      "ambiguous": false,
+      "write": true,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Done. The two missing rows were added to `product_category_name_translation`:\n\n- `pc_gamer` → `pc_gamer`\n- `portateis_cozinha_e_preparadores_de_alimentos` → `portable_kitchen_and_food_preparers`\n\nBoth categories are confirmed present in `products` (3 and 10 products) and were absent from the translation table before the insert. The write ran on the scratch copy of the database.\n\n```sql\nINSERT INTO product_category_name_translation (product_category_name, product_category_name_english) VALUES ('pc_gamer', 'pc_gamer'), ('portateis_cozinha_e_preparadores_de_alimentos', 'portable_kitchen_and_food_preparers');\n```",
+        "Done. The two missing translation rows were added:\n\n- `pc_gamer` → `pc_gamer`\n- `portateis_cozinha_e_preparadores_de_alimentos` → `portable_kitchen_and_food_preparers`\n\nThe write was approved and executed on the scratch copy of the database (2 rows inserted). Note that read-only queries in this session still point at the original database, so the new rows won't show up there until the scratch change is applied to the main database.\n\n```sql\nINSERT INTO product_category_name_translation (product_category_name, product_category_name_english) VALUES ('pc_gamer', 'pc_gamer'), ('portateis_cozinha_e_preparadores_de_alimentos', 'portable_kitchen_and_food_preparers');\n```",
+        "Done. Both missing entries were added to the translation table (verified they didn't exist beforehand):\n\n- pc_gamer → pc_gamer\n- portateis_cozinha_e_preparadores_de_alimentos → portable_kitchen_and_food_preparers\n\nThe write was approved and executed on the scratch database (2 rows inserted).\n\n```sql\nINSERT INTO product_category_name_translation (product_category_name, product_category_name_english)\nVALUES ('pc_gamer', 'pc_gamer'),\n       ('portateis_cozinha_e_preparadores_de_alimentos', 'portable_kitchen_and_food_preparers')\n```"
+      ],
+      "sqls": [
+        "INSERT INTO product_category_name_translation (product_category_name, product_category_name_english) VALUES ('pc_gamer', 'pc_gamer'), ('portateis_cozinha_e_preparadores_de_alimentos', 'portable_kitchen_and_food_preparers')",
+        "INSERT INTO product_category_name_translation (product_category_name, product_category_name_english) VALUES ('pc_gamer', 'pc_gamer'), ('portateis_cozinha_e_preparadores_de_alimentos', 'portable_kitchen_and_food_preparers')",
+        "INSERT INTO product_category_name_translation (product_category_name, product_category_name_english)\nVALUES ('pc_gamer', 'pc_gamer'),\n       ('portateis_cozinha_e_preparadores_de_alimentos', 'portable_kitchen_and_food_preparers')"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "w04",
+      "question": "Many products have a missing photo count. Set product_photos_qty to 0 for products where it is missing.",
+      "ambiguous": false,
+      "write": true,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Done. The update was approved and executed on the scratch database: 610 products had a missing `product_photos_qty` and it was set to 0 for all of them.\n\n```sql\nUPDATE products SET product_photos_qty = 0 WHERE product_photos_qty IS NULL\n```",
+        "Done. The update ran successfully on the scratch database: 610 products with a missing `product_photos_qty` now have it set to 0.\n\n```sql\nUPDATE products SET product_photos_qty = 0 WHERE product_photos_qty IS NULL\n```",
+        "Done. The update was approved and executed on the scratch copy of the database: 610 products had a missing (NULL) `product_photos_qty` and were set to 0. No NULLs remain in that column.\n\n```sql\nUPDATE products SET product_photos_qty = 0 WHERE product_photos_qty IS NULL;\n```"
+      ],
+      "sqls": [
+        "UPDATE products SET product_photos_qty = 0 WHERE product_photos_qty IS NULL",
+        "UPDATE products SET product_photos_qty = 0 WHERE product_photos_qty IS NULL",
+        "UPDATE products SET product_photos_qty = 0 WHERE product_photos_qty IS NULL"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    },
+    {
+      "id": "w05",
+      "question": "The created-status orders are stale. Delete them from the orders table.",
+      "ambiguous": false,
+      "write": true,
+      "correct": [
+        true,
+        true,
+        true
+      ],
+      "loose": [
+        true,
+        true,
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Done. The 5 stale `created`-status orders were deleted from the `orders` table (executed on the scratch copy after approval). Note: 5 rows in `order_payments` still reference those deleted order IDs; let me know if you'd like those cleaned up too.\n\n```sql\nDELETE FROM orders WHERE order_status = 'created'\n```",
+        "Done. The 5 stale orders with status `created` have been deleted from the `orders` table (executed on the scratch copy of the database).\n\nOne caveat: `order_items` and `order_payments` reference `order_id`, so those deleted orders may leave orphaned rows in those tables. If you want, I can clean those up too.\n\n```sql\nDELETE FROM orders WHERE order_status = 'created'\n```",
+        "Done. The 5 stale orders with status `created` were deleted from the `orders` table (write approved and executed on the scratch database; 5 rows changed). The remaining statuses are: delivered (96,478), shipped (1,107), canceled (625), unavailable (609), invoiced (314), processing (301), approved (2).\n\n```sql\nDELETE FROM orders WHERE order_status = 'created'\n```"
+      ],
+      "sqls": [
+        "DELETE FROM orders WHERE order_status = 'created'",
+        "DELETE FROM orders WHERE order_status = 'created'",
+        "DELETE FROM orders WHERE order_status = 'created'"
+      ],
+      "stop_reasons": [
+        "answered",
+        "answered",
+        "answered"
+      ]
+    }
+  ],
+  "success_rate": 0.793939393939394,
+  "loose_success_rate": 0.9272727272727272,
+  "pass_k": 0.7272727272727273,
+  "mean_tokens": 8264.175757575758,
+  "mean_steps": 3.533333333333333,
+  "sql_error_rate": 0.01015228426395939,
+  "mean_clarifications": 0.006060606060606061
+}

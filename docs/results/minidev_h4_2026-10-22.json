@@ -1,0 +1,499 @@
+{
+  "suite": "minidev",
+  "config_name": "h4",
+  "model": "qwen3.8-27b",
+  "date": "2026-10-22",
+  "per_question": [
+    {
+      "id": "minidev_1471",
+      "question": "What is the ratio of customers who pay in EUR against customers who pay in CZK?\n(External knowledge: ratio of customers who pay in EUR against customers who pay in CZK = count(Currency = 'EUR') / count(Currency = 'CZK').)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are 2,002 customers paying in EUR and 30,459 paying in CZK, giving a ratio of 2002 / 30459 ≈ **0.0657** (about 0.066, i.e., roughly 1 EUR customer for every 15 CZK customers).\n\n```sql\nSELECT CAST(COUNT(CASE WHEN Currency = 'EUR' THEN 1 END) AS REAL) / COUNT(CASE WHEN Currency = 'CZK' THEN 1 END) FROM customers;\n```"
+      ],
+      "sqls": [
+        "SELECT CAST(COUNT(CASE WHEN Currency = 'EUR' THEN 1 END) AS REAL) / COUNT(CASE WHEN Currency = 'CZK' THEN 1 END) FROM customers"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_1472",
+      "question": "In 2012, who had the least consumption in LAM?\n(External knowledge: Year 2012 can be presented as Between 201201 And 201212; The first 4 strings of the Date values in the yearmonth table can represent year.)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Among LAM-segment customers, the one with the least total consumption in 2012 (Jan–Dec) is CustomerID **47273**, with a total consumption of 0.74.\n\n```sql\nSELECT c.CustomerID\nFROM customers c\nJOIN yearmonth ym ON c.CustomerID = ym.CustomerID\nWHERE c.Segment = 'LAM'\n  AND ym.Date BETWEEN '201201' AND '201212'\nGROUP BY c.CustomerID\nORDER BY SUM(ym.Consumption) ASC\nLIMIT 1\n```"
+      ],
+      "sqls": [
+        "SELECT c.CustomerID\nFROM customers c\nJOIN yearmonth ym ON c.CustomerID = ym.CustomerID\nWHERE c.Segment = 'LAM'\n  AND ym.Date BETWEEN '201201' AND '201212'\nGROUP BY c.CustomerID\nORDER BY SUM(ym.Consumption) ASC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_1312",
+      "question": "What's Angela Sanders's major?\n(External knowledge: Angela Sanders is the full name; full name refers to first_name, last_name; major refers to major_name.)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Angela Sanders's major is **Business**.\n\n```sql\nSELECT T2.major_name\nFROM member AS T1\nINNER JOIN major AS T2 ON T1.link_to_major = T2.major_id\nWHERE T1.first_name = 'Angela' AND T1.last_name = 'Sanders'\n```"
+      ],
+      "sqls": [
+        "SELECT T2.major_name\nFROM member AS T1\nINNER JOIN major AS T2 ON T1.link_to_major = T2.major_id\nWHERE T1.first_name = 'Angela' AND T1.last_name = 'Sanders'"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_1317",
+      "question": "Among the students from the Student_Club who attended the event \"Women's Soccer\", how many of them want a T-shirt that's in medium size?\n(External knowledge: Women's Soccer is an event name; T-shirt that is in medium size refers to t_shirt_size = 'Medium')",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Among the students who attended the \"Women's Soccer\" event, **7** of them want a T-shirt in Medium size.\n\n```sql\nSELECT COUNT(*) \nFROM attendance AS a\nJOIN event AS e ON a.link_to_event = e.event_id\nJOIN member AS m ON a.link_to_member = m.member_id\nWHERE e.event_name = 'Women''s Soccer'\n  AND m.t_shirt_size = 'Medium'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*) \nFROM attendance AS a\nJOIN event AS e ON a.link_to_event = e.event_id\nJOIN member AS m ON a.link_to_member = m.member_id\nWHERE e.event_name = 'Women''s Soccer'\n  AND m.t_shirt_size = 'Medium'"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_1149",
+      "question": "Are there more in-patient or outpatient who were male? What is the deviation in percentage?\n(External knowledge: male refers to SEX = 'M'; in-patient refers to Admission = '+'; outpatient refers to Admission = '-'; percentage = DIVIDE(COUNT(ID) where SEX = 'M' and Admission = '+', COUNT(ID) where SEX  = 'M' and Admission = '-'))",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false
+      ],
+      "loose": [
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "There are more male outpatients than male in-patients: 107 male outpatients (Admission = '-') versus 89 male in-patients (Admission = '+').\n\nThe deviation in percentage (in-patient / outpatient) is 89 ÷ 107 ≈ 0.8318 (about 83.18%).\n\n```sql\nSELECT CAST(SUM(CASE WHEN Admission = '+' THEN 1 ELSE 0 END) AS REAL) / SUM(CASE WHEN Admission = '-' THEN 1 ELSE 0 END) FROM Patient WHERE SEX = 'M'\n```"
+      ],
+      "sqls": [
+        "SELECT CAST(SUM(CASE WHEN Admission = '+' THEN 1 ELSE 0 END) AS REAL) / SUM(CASE WHEN Admission = '-' THEN 1 ELSE 0 END) FROM Patient WHERE SEX = 'M'"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_1150",
+      "question": "What is the percentage of female patient were born after 1930?\n(External knowledge: female refers to Sex = 'F'; patient who were born after 1930 refers to year(Birthday) > '1930'; calculation = DIVIDE(COUNT(ID) where year(Birthday) > '1930' and SEX = 'F'), (COUNT(ID) where SEX = 'F'))",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Of the 1,023 female patients, 962 were born after 1930, giving a percentage of **94.04%**.\n\n```sql\nSELECT CAST(SUM(CASE WHEN strftime('%Y', Birthday) > '1930' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(ID)\nFROM Patient\nWHERE SEX = 'F';\n```"
+      ],
+      "sqls": [
+        "SELECT CAST(SUM(CASE WHEN strftime('%Y', Birthday) > '1930' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(ID)\nFROM Patient\nWHERE SEX = 'F'"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_1025",
+      "question": "Give the name of the league had the most goals in the 2016 season?\n(External knowledge: league that had the most goals refers to MAX(SUM(home_team_goal, away_team_goal)); 2016 season refers to season = '2015/2016';)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The league with the most goals in the 2015/2016 season is **Spain LIGA BBVA**, with 1,043 total goals scored.\n\n```sql\nSELECT L.name\nFROM League L\nJOIN Match M ON L.id = M.league_id\nWHERE M.season = '2015/2016'\nGROUP BY L.name\nORDER BY SUM(M.home_team_goal + M.away_team_goal) DESC\nLIMIT 1;\n```"
+      ],
+      "sqls": [
+        "SELECT L.name\nFROM League L\nJOIN Match M ON L.id = M.league_id\nWHERE M.season = '2015/2016'\nGROUP BY L.name\nORDER BY SUM(M.home_team_goal + M.away_team_goal) DESC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_1028",
+      "question": "In Scotland Premier League, which away team won the most during the 2010 season?\n(External knowledge: Final result should return the Team.team_long_name; Scotland Premier League refers to League.name = 'Scotland Premier League'; away team refers to away_team_api_id; away team that won the most refers to MAX(SUBTRACT(away_team_goal, home_team_goal) > 0); 2010 season refers to season = '2009/2010'; won the most refers to MAX(COUNT(*));)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "**Answer: Celtic**\n\nIn the 2009/2010 Scotland Premier League season, Celtic won the most matches as the away team, with 11 away wins (Rangers also finished with 11, but the standard max-count query returns Celtic as the top result).\n\n```sql\nSELECT T2.team_long_name\nFROM Match AS T1\nINNER JOIN Team AS T2 ON T1.away_team_api_id = T2.team_api_id\nINNER JOIN League AS T3 ON T1.league_id = T3.id\nWHERE T3.name = 'Scotland Premier League' AND T1.season = '2009/2010' AND T1.away_team_goal > T1.home_team_goal\nGROUP BY T1.away_team_api_id\nORDER BY COUNT(*) DESC\nLIMIT 1\n```"
+      ],
+      "sqls": [
+        "SELECT T2.team_long_name\nFROM Match AS T1\nINNER JOIN Team AS T2 ON T1.away_team_api_id = T2.team_api_id\nINNER JOIN League AS T3 ON T1.league_id = T3.id\nWHERE T3.name = 'Scotland Premier League' AND T1.season = '2009/2010' AND T1.away_team_goal > T1.home_team_goal\nGROUP BY T1.away_team_api_id\nORDER BY COUNT(*) DESC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_846",
+      "question": "Please list the reference names of the drivers who are eliminated in the first period in race number 20.\n(External knowledge: driver reference name refers to driverRef; first qualifying period refers to q1; drivers who are eliminated in the first qualifying period refers to 5 drivers with MAX(q1); race number refers to raceId;)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The 5 drivers with the slowest (MAX) q1 times in race 20 — i.e., eliminated in the first qualifying period — are:\n\n1. sato (1:35.725)\n2. davidson (1:34.140)\n3. vettel (1:34.127)\n4. sutil (1:33.562)\n5. fisichella (1:33.501)\n\n```sql\nSELECT d.driverRef\nFROM drivers AS d\nJOIN qualifying AS q ON d.driverId = q.driverId\nWHERE q.raceId = 20\nORDER BY q.q1 DESC\nLIMIT 5\n```"
+      ],
+      "sqls": [
+        "SELECT d.driverRef\nFROM drivers AS d\nJOIN qualifying AS q ON d.driverId = q.driverId\nWHERE q.raceId = 20\nORDER BY q.q1 DESC\nLIMIT 5"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_847",
+      "question": "What is the surname of the driver with the best lap time in race number 19 in the second qualifying period?\n(External knowledge: race number refers to raceId; second qualifying period refers to q2; best lap time refers to MIN(q2);)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false
+      ],
+      "loose": [
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "The driver with the best (minimum) Q2 time in race 19 is Kimi Räikkönen, with a time of 1:34.188. (Note: some drivers had no Q2 time at all, so the minimum must be taken over non-empty q2 values.)\n\nSurname: **Räikkönen**\n\n```sql\nSELECT d.surname\nFROM qualifying q\nJOIN drivers d ON q.driverId = d.driverId\nWHERE q.raceId = 19 AND q.q2 IS NOT NULL\nORDER BY q.q2 ASC\nLIMIT 1;\n```"
+      ],
+      "sqls": [
+        "SELECT d.surname\nFROM qualifying q\nJOIN drivers d ON q.driverId = d.driverId\nWHERE q.raceId = 19 AND q.q2 IS NOT NULL\nORDER BY q.q2 ASC\nLIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_717",
+      "question": "Please list all the superpowers of 3-D Man.\n(External knowledge: 3-D Man refers to superhero_name = '3-D Man'; superpowers refers to power_name)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "3-D Man (Charles Chandler) has the following superpowers:\n\n- Agility\n- Super Strength\n- Stamina\n- Super Speed\n\n```sql\nSELECT sp.power_name\nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower sp ON hp.power_id = sp.id\nWHERE s.superhero_name = '3-D Man'\n```"
+      ],
+      "sqls": [
+        "SELECT sp.power_name\nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower sp ON hp.power_id = sp.id\nWHERE s.superhero_name = '3-D Man'"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_719",
+      "question": "Among the superheroes with the super power of \"Super Strength\", how many of them have a height of over 200cm?\n(External knowledge: super power of \"Super Strength\" refers to power_name = 'Super Strength'; a height of over 200cm refers to height_cm > 200)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "56 superheroes with the \"Super Strength\" power have a height over 200cm.\n\n```sql\nSELECT COUNT(*)\nFROM superhero AS s\nJOIN hero_power AS hp ON s.id = hp.hero_id\nJOIN superpower AS p ON hp.power_id = p.id\nWHERE p.power_name = 'Super Strength'\n  AND s.height_cm > 200\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*)\nFROM superhero AS s\nJOIN hero_power AS hp ON s.id = hp.hero_id\nJOIN superpower AS p ON hp.power_id = p.id\nWHERE p.power_name = 'Super Strength'\n  AND s.height_cm > 200"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_531",
+      "question": "Which user has a higher reputation, Harlan or Jarrod Dixon?\n(External knowledge: \"Harlan\" and \"Jarrod Dixon\" are both DisplayName; highest reputation refers to Max(Reputation))",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "**Harlan** has the higher reputation — 457, compared to Jarrod Dixon's 101.\n\n```sql\nSELECT DisplayName FROM users WHERE DisplayName IN ('Harlan', 'Jarrod Dixon') ORDER BY Reputation DESC LIMIT 1\n```"
+      ],
+      "sqls": [
+        "SELECT DisplayName FROM users WHERE DisplayName IN ('Harlan', 'Jarrod Dixon') ORDER BY Reputation DESC LIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_532",
+      "question": "Please list the display names of all the users whose accounts were created in the year 2011.\n(External knowledge: account created in the year 2011 refers to year(CreationDate) = 2011)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are 4,430 users whose accounts were created in 2011 (too many to list fully in text — e.g., Rob, Anubhav, Betamoo, dram, dcurtis, DavidDong, varuman, ennuikiller, Jaime, Sean Hill, ...). The complete list is produced by the query below:\n\n```sql\nSELECT DisplayName FROM users WHERE strftime('%Y', CreationDate) = '2011'\n```"
+      ],
+      "sqls": [
+        "SELECT DisplayName FROM users WHERE strftime('%Y', CreationDate) = '2011'"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_340",
+      "question": "Which are the cards that have incredibly powerful foils.\n(External knowledge: incredibly poweful foils refers to cardKingdomFoilId is not null AND cardKingdomId is not null)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false
+      ],
+      "loose": [
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "Based on the definition (cardKingdomFoilId IS NOT NULL AND cardKingdomId IS NOT NULL), 25,061 card entries qualify — that's 17,544 distinct card names, e.g., \"Ancestor's Chosen\", \"Angel of Mercy\", \"Aven Cloudchaser\", and so on across the database.\n\n```sql\nSELECT name FROM cards WHERE cardKingdomFoilId IS NOT NULL AND cardKingdomId IS NOT NULL\n```"
+      ],
+      "sqls": [
+        "SELECT name FROM cards WHERE cardKingdomFoilId IS NOT NULL AND cardKingdomId IS NOT NULL"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_341",
+      "question": "What are the borderless cards available without powerful foils?\n(External knowledge: borderless' refers to borderColor; poweful foils refers to cardKingdomFoilId paired with cardKingdomId AND cardKingdomId is not null)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false
+      ],
+      "loose": [
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "The borderless cards (borderColor = 'borderless') that have no powerful foil — i.e., where cardKingdomFoilId is not paired with a non-null cardKingdomId — are these 72 entries:\n\nVoid Beckoner; Valki, God of Lies // Tibalt, Cosmic Impostor; Barkchannel Pathway // Tidechannel Pathway (×3); Blightstep Pathway // Searstep Pathway (×3); Darkbore Pathway // Slitherbore Pathway (×3); Hengegate Pathway // Mistgate Pathway (×3); Elspeth, Knight-Errant; Liliana, the Last Hope; Daretti, Ingenious Iconoclast; Nicol Bolas, Planeswalker; Ral, Izzet Viceroy; Teferi, Hero of Dominaria; Tezzeret, Agent of Bolas; Vraska, Golgari Queen; Karn, Scion of Urza; Tamiyo, the Moon Sage; Sorin Markov; Jaya Ballard; Ajani, Mentor of Heroes; Dack Fayden; Domri, Chaos Bringer; Kaya, Orzhov Usurper; Ugin, the Spirit Dragon; Gideon Blackblade; Jace, the Mind Sculptor; Tezzeret the Seeker; Garruk, Apex Predator; Nicol Bolas, Dragon-God; Nahiri, the Harbinger; Sarkhan Unbroken; Hangarback Walker; Captain Sisay; Meren of Clan Nel Toth; Narset, Enlightened Master; Oona, Queen of the Fae; Saskia the Unyielding; Necrotic Ooze; Acidic Slime; Scavenging Ooze; The Mimeoplasm; Voidslime; Anguished Unmaking; Assassin's Trophy; Decimate; Dreadbore; Thraximundar; Branchloft Pathway // Boulderloft Pathway (×3); Brightclimb Pathway // Grimclimb Pathway (×3); Clearwater Pathway // Murkwater Pathway (×3); Cragcrown Pathway // Timbercrown Pathway (×3); Needleverge Pathway // Pillarverge Pathway (×3); Riverglide Pathway // Lavaglide Pathway (×3).\n\n```sql\nSELECT name\nFROM cards\nWHERE borderColor = 'borderless'\n  AND NOT (cardKingdomFoilId IS NOT NULL AND cardKingdomId IS NOT NULL)\n```"
+      ],
+      "sqls": [
+        "SELECT name\nFROM cards\nWHERE borderColor = 'borderless'\n  AND NOT (cardKingdomFoilId IS NOT NULL AND cardKingdomId IS NOT NULL)"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_195",
+      "question": "What is the most common bond type?\n(External knowledge: most common bond type refers MAX(COUNT(bond_type)))",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "The most common bond type is \"-\" (single bond), which appears 7,743 times in the bond table — far more than \"=\" (1,408) or \"#\" (5).\n\n```sql\nSELECT bond_type FROM bond GROUP BY bond_type ORDER BY COUNT(*) DESC LIMIT 1\n```"
+      ],
+      "sqls": [
+        "SELECT bond_type FROM bond GROUP BY bond_type ORDER BY COUNT(*) DESC LIMIT 1"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_197",
+      "question": "Calculate the average number of oxygen atoms in single-bonded molecules.\n(External knowledge: single-bonded molecules refers to bond_type = '-' ; average number of oxygen atom = AVG(element = 'o'))",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        false
+      ],
+      "loose": [
+        false
+      ],
+      "solved_every_repeat": false,
+      "answers": [
+        "Both interpretations are computed. Given the explicit hint that \"average number of oxygen atom = AVG(element = 'o')\", the intended calculation is `AVG(element = 'o')` over atoms of molecules that have single bonds (bond_type = '-'), which yields **0.08006384774143697**.\n\nThe average of the oxygen-atom indicator (AVG(element = 'o')) across atoms in single-bonded molecules is **0.0801** (i.e., about 8.0% of the atom–single-bond pairs involve an oxygen atom).\n\n```sql\nSELECT AVG(element = 'o')\nFROM atom\nJOIN bond ON atom.molecule_id = bond.molecule_id\nWHERE bond.bond_type = '-'\n```"
+      ],
+      "sqls": [
+        "SELECT AVG(element = 'o')\nFROM atom\nJOIN bond ON atom.molecule_id = bond.molecule_id\nWHERE bond.bond_type = '-'"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_5",
+      "question": "How many schools with an average score in Math greater than 400 in the SAT test are exclusively virtual?\n(External knowledge: Exclusively virtual refers to Virtual = 'F')",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "There are **4** schools that are exclusively virtual (Virtual = 'F') with an average SAT Math score greater than 400:\n\n1. California Virtual Academy @ Los Angeles (Math: 502)\n2. Insight @ Los Angeles (Math: 437)\n3. Capistrano Connections Academy (Math: 513)\n4. California Connections Academy @ Ripon (Math: 487)\n\n```sql\nSELECT COUNT(T1.cds)\nFROM satscores AS T1\nINNER JOIN schools AS T2 ON T1.cds = T2.CDSCode\nWHERE T1.AvgScrMath > 400 AND T2.Virtual = 'F'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(T1.cds)\nFROM satscores AS T1\nINNER JOIN schools AS T2 ON T1.cds = T2.CDSCode\nWHERE T1.AvgScrMath > 400 AND T2.Virtual = 'F'"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_11",
+      "question": "Please list the codes of the schools with a total enrollment of over 500.\n(External knowledge: Total enrollment can be represented by `Enrollment (K-12)` + `Enrollment (Ages 5-17)`)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "Based on the `frpm` table (academic year 2014-2015), total enrollment is computed as `Enrollment (K-12) + Enrollment (Ages 5-17)`. There are **7,806 schools** with a total enrollment over 500. A sample of matching codes (in CDSCode order) includes: 01100170109835 (2157), 01100170112607 (771), 01100170124172 (514), 01100170125567 (552), 01100176001788 (1183), 01100176002000 (874), 01316170131763 (745), 01611190111765 (1176), 01611190119222 (946), 01611190122085 (1016), … and so on through the full list of 7,806 codes (e.g., ending near 07612320116593). The full list is returned by the query below.\n\n```sql\nSELECT CDSCode\nFROM frpm\nWHERE \"Enrollment (K-12)\" + \"Enrollment (Ages 5-17)\" > 500\n```"
+      ],
+      "sqls": [
+        "SELECT CDSCode\nFROM frpm\nWHERE \"Enrollment (K-12)\" + \"Enrollment (Ages 5-17)\" > 500"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_89",
+      "question": "How many accounts who choose issuance after transaction are staying in East Bohemia region?\n(External knowledge: A3 contains the data of region; 'POPLATEK PO OBRATU' represents for 'issuance after transaction'.)",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "13 accounts with the \"issuance after transaction\" fee frequency (POPLATEK PO OBRATU) are located in the East Bohemia region.\n\n```sql\nSELECT COUNT(*)\nFROM account AS a\nJOIN district AS d ON a.district_id = d.district_id\nWHERE a.frequency = 'POPLATEK PO OBRATU'\n  AND d.A3 = 'east Bohemia'\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(*)\nFROM account AS a\nJOIN district AS d ON a.district_id = d.district_id\nWHERE a.frequency = 'POPLATEK PO OBRATU'\n  AND d.A3 = 'east Bohemia'"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    },
+    {
+      "id": "minidev_92",
+      "question": "List out the no. of districts that have female average salary is more than 6000 but less than 10000?\n(External knowledge: A11 refers to average salary; Female mapps to gender = 'F')",
+      "ambiguous": false,
+      "write": false,
+      "correct": [
+        true
+      ],
+      "loose": [
+        true
+      ],
+      "solved_every_repeat": true,
+      "answers": [
+        "**Answer: 69**\n\nThere are 69 districts whose average salary (column A11) is more than 6000 but less than 10000, each having at least one female client (gender = 'F'). (No district has A11 exactly 6000 or 10000, so strict vs. inclusive bounds give the same count.)\n\n```sql\nSELECT COUNT(DISTINCT T1.district_id)\nFROM district AS T1\nINNER JOIN client AS T2 ON T1.district_id = T2.district_id\nWHERE T2.gender = 'F' AND T1.A11 > 6000 AND T1.A11 < 10000\n```"
+      ],
+      "sqls": [
+        "SELECT COUNT(DISTINCT T1.district_id)\nFROM district AS T1\nINNER JOIN client AS T2 ON T1.district_id = T2.district_id\nWHERE T2.gender = 'F' AND T1.A11 > 6000 AND T1.A11 < 10000"
+      ],
+      "stop_reasons": [
+        "answered"
+      ]
+    }
+  ],
+  "success_rate": 0.7727272727272727,
+  "loose_success_rate": 0.7727272727272727,
+  "pass_k": 0.7727272727272727,
+  "mean_tokens": 9822.318181818182,
+  "mean_steps": 4.909090909090909,
+  "sql_error_rate": 0.0,
+  "mean_clarifications": 0.0
+}
