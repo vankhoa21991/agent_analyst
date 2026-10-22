@@ -61,3 +61,20 @@ def test_match_duplicates_counted():
     e = qr(["n"], [(1,), (1,), (2,)])
     a = qr(["n"], [(1,), (2,)])
     assert results_match(e, a) is False
+
+
+def test_value_present_single_row_gold():
+    from evals.grading import value_present
+
+    gold = QueryResult(rows=[(96478,)], columns=["n"], truncated=False, seconds=0.0)
+    agent_breakdown = QueryResult(
+        rows=[(96478, "delivered"), (1107, "shipped")],
+        columns=["n", "s"], truncated=False, seconds=0.0,
+    )
+    assert value_present(gold, agent_breakdown) is True
+    assert value_present(gold, QueryResult(rows=[(1107,)], columns=["n"],
+                                truncated=False, seconds=0.0)) is False
+    # multi-row gold: not applicable
+    multi = QueryResult(rows=[(1, "a"), (2, "b")], columns=["n", "s"],
+                        truncated=False, seconds=0.0)
+    assert value_present(multi, agent_breakdown) is False

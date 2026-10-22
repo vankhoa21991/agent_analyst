@@ -224,3 +224,18 @@ def test_context_overflow_stops_before_calling(tmp_path):
     res = agent.run("x" * 500)
     assert res.stop_reason == "context_overflow"
     assert llm.calls == []  # never called the model
+
+
+def test_answer_sql_block_becomes_result_sql(tmp_path):
+    """The ```sql block in the final answer is the answer SQL; an earlier
+    exploratory run_sql must not shadow it."""
+    agent, llm, db, _, _ = make_agent(tmp_path, [
+        tool_reply("run_sql", {"sql": "SELECT order_status, COUNT(*) AS n FROM orders GROUP BY order_status"}),
+        text_reply(
+            "96,478 orders were delivered.\n\n```sql\n"
+            "SELECT COUNT(*) AS n FROM orders WHERE order_status = 'delivered'\n```"
+        ),
+    ])
+    res = agent.run("How many orders were delivered?")
+    assert res.stop_reason == "answered"
+    assert res.sql == "SELECT COUNT(*) AS n FROM orders WHERE order_status = 'delivered'"

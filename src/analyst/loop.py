@@ -7,6 +7,7 @@ character-based context estimate (chars / 3) checked before every call.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from dataclasses import dataclass, field
 from typing import Callable
@@ -27,10 +28,26 @@ schema before writing SQL.
 2. Use run_sql for read-only queries. Data-changing SQL is rejected there.
 3. To change data, use execute_write. It only runs after the user approves \
 it. If the user rejects it, say so and do not retry.
-4. When you are done, reply with a concise plain-text answer. Always show \
-the SQL you used to get the numbers.
+4. When you are done, reply with a concise plain-text answer. End with the \
+single SQL query in a ```sql fenced block that directly computes the \
+requested result — not an exploratory or breakdown query. If the question \
+asks for one number, the query must return exactly that number.
 5. If a tool returns an error, read the error and fix your approach.
 """
+
+_SQL_BLOCK = re.compile(r"```sql\s*(.*?)```", re.DOTALL)
+_ANY_BLOCK = re.compile(r"```\s*(.*?)```", re.DOTALL)
+
+
+def answer_sql(text: str | None) -> str | None:
+    """The SQL the agent presents as its answer: the last fenced sql block
+    in the final message (falling back to any fenced block)."""
+    if not text:
+        return None
+    blocks = _SQL_BLOCK.findall(text) or _ANY_BLOCK.findall(text)
+    if not blocks:
+        return None
+    return blocks[-1].strip().rstrip(";").strip()
 
 CLARIFY_RULE = """6. If the question has more than one reasonable meaning \
 (for example an undefined business term), call ask_user exactly once before \
@@ -102,7 +119,9 @@ class Agent:
         def finish(answer: str, stop_reason: str) -> AgentResult:
             return AgentResult(
                 answer=answer,
-                sql=last_sql,
+                # The SQL the agent presents as its answer wins over the
+                # last exploratory run_sql (which is often a breakdown).
+                sql=answer_sql(answer) or last_sql,
                 steps=steps,
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,

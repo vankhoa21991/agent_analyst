@@ -78,6 +78,7 @@ def main() -> None:
 
     print(f"\n=== {cfg.run_name} on {args.suite} ===")
     print(f"success rate:        {report.success_rate:.1%}")
+    print(f"loose success rate:  {report.loose_success_rate:.1%}  (gold value present in agent rows)")
     print(f"pass^{args.repeats}:              {report.pass_k:.1%}")
     print(f"tokens/task:         {report.mean_tokens:.0f}")
     print(f"steps/task:          {report.mean_steps:.2f}")

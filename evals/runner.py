@@ -15,7 +15,7 @@ from analyst.llm import LLMClient, ModelUnavailable
 from analyst.loop import Agent, AgentResult
 from analyst.tools import ToolRegistry
 from analyst.tracing import Tracer
-from .grading import results_match
+from .grading import results_match, value_present
 
 _SQL_BLOCK = re.compile(r"```sql\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 _ANY_BLOCK = re.compile(r"```\s*(.*?)```", re.DOTALL)
@@ -29,6 +29,7 @@ class RunReport:
     date: str
     per_question: list[dict] = field(default_factory=list)
     success_rate: float = 0.0
+    loose_success_rate: float = 0.0
     pass_k: float = 0.0
     mean_tokens: float = 0.0
     mean_steps: float = 0.0
@@ -70,21 +71,28 @@ def _question_db(question: dict, cfg: AgentConfig, fallback: Database | None) ->
     return fallback
 
 
-def _grade(question: dict, res: AgentResult, gold_db: Database | None, cfg: AgentConfig) -> bool:
+def _grade(question: dict, res: AgentResult, gold_db: Database | None, cfg: AgentConfig) -> tuple[bool, bool]:
+    """Return (strict_correct, loose_correct). Strict is the BIRD-style
+    row match of the answer SQL's result against the gold result. Loose
+    additionally counts single-value questions where the gold value
+    appears in the agent's result rows (right number, different shape)."""
     db = _question_db(question, cfg, gold_db)
     if question.get("write"):
         if not res.write_sql or res.write_rows is None:
-            return False
+            return False, False
         gold_rows = _write_rowcount(db, question["gold_sql"])
-        return gold_rows is not None and res.write_rows == gold_rows
+        ok = gold_rows is not None and res.write_rows == gold_rows
+        return ok, ok
     if not res.sql:
-        return False
+        return False, False
     try:
         expected = db.query(question["gold_sql"])
         actual = db.query(res.sql)
     except QueryError:
-        return False
-    return results_match(expected, actual)
+        return False, False
+    if results_match(expected, actual):
+        return True, True
+    return False, value_present(expected, actual)
 
 
 def run_suite(
@@ -99,7 +107,7 @@ def run_suite(
 ) -> RunReport:
     """make_agent(question: dict) -> agent with .run(question: str)."""
     per_question: list[dict] = []
-    total_correct = total_attempts = 0
+    total_correct = total_loose = total_attempts = 0
     total_tokens = total_steps = total_clar = 0
     total_sql_runs = total_sql_errors = 0
 
@@ -108,16 +116,18 @@ def run_suite(
         for _ in range(repeats):
             agent = make_agent(q)
             res = agent.run(q["question"])
-            correct = _grade(q, res, gold_db, cfg)
+            correct, loose = _grade(q, res, gold_db, cfg)
             attempts.append(
                 {
                     "correct": correct,
+                    "loose": loose,
                     "answer": res.answer,
                     "sql": res.sql,
                     "stop_reason": res.stop_reason,
                 }
             )
             total_correct += int(correct)
+            total_loose += int(loose)
             total_attempts += 1
             total_tokens += res.prompt_tokens + res.completion_tokens
             total_steps += res.steps
@@ -131,6 +141,7 @@ def run_suite(
                 "ambiguous": q.get("ambiguous", False),
                 "write": q.get("write", False),
                 "correct": [a["correct"] for a in attempts],
+                "loose": [a["loose"] for a in attempts],
                 "solved_every_repeat": all(a["correct"] for a in attempts),
                 "answers": [a["answer"] for a in attempts],
                 "sqls": [a["sql"] for a in attempts],
@@ -146,6 +157,7 @@ def run_suite(
         date=date.today().isoformat(),
         per_question=per_question,
         success_rate=total_correct / total_attempts if total_attempts else 0.0,
+        loose_success_rate=total_loose / total_attempts if total_attempts else 0.0,
         pass_k=(
             sum(p["solved_every_repeat"] for p in per_question) / n if n else 0.0
         ),

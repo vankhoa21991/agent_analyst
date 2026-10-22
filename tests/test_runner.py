@@ -178,3 +178,29 @@ def test_runner_uses_per_question_db_path(tmp_path):
         suite="t", config_name="t", model="m",
     )
     assert report.success_rate == 0.0
+
+
+def test_runner_loose_counts_value_present(tmp_path):
+    """A breakdown query containing the gold value: strict fails, loose passes."""
+    gold_db = make_gold_db(tmp_path)
+    questions = [
+        {
+            "id": "q1",
+            "question": "how many orders?",
+            "gold_sql": "SELECT COUNT(*) AS n FROM orders WHERE order_status = 'delivered'",
+        }
+    ]
+    breakdown = (
+        "SELECT order_status, COUNT(*) AS n FROM orders GROUP BY order_status"
+    )
+    report = run_suite(
+        questions,
+        fake_agent_factory([breakdown]),
+        repeats=1,
+        gold_db=gold_db, cfg=make_cfg(tmp_path, gold_db),
+        suite="t", config_name="t", model="m",
+    )
+    assert report.success_rate == 0.0
+    assert report.loose_success_rate == 1.0
+    assert report.per_question[0]["correct"] == [False]
+    assert report.per_question[0]["loose"] == [True]

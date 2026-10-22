@@ -44,3 +44,18 @@ def results_match(
             if not _values_match(ev, av, tol):
                 return False
     return True
+
+
+def value_present(gold: QueryResult, agent: QueryResult, tol: float = 1e-6) -> bool:
+    """Supplementary (loose) check for single-value questions: the gold
+    value appears somewhere in the agent's result rows. An agent that
+    answers "how many X" with a breakdown that contains the right number
+    computed the answer even though its SQL shape does not match the
+    gold. Only meaningful when the gold result is exactly one row."""
+    if len(gold.rows) != 1:
+        return False
+    for gv in gold.rows[0]:
+        for row in agent.rows:
+            if any(_values_match(gv, av, tol) for av in row):
+                return True
+    return False
