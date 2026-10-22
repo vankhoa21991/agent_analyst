@@ -173,7 +173,7 @@ def run_suite(
 # -- B0 baseline: plain model, full schema in the prompt, no tools ------------
 
 BASELINE_PROMPT = """You are a data analyst. The user asks a business question \
-about the SQLite database whose schema is below.
+about {db_note}.
 
 Database schema:
 {schema}
@@ -213,11 +213,12 @@ class B0Agent:
     read-only (writes are never executed).
     """
 
-    def __init__(self, cfg: AgentConfig, llm: LLMClient, db: Database):
+    def __init__(self, cfg: AgentConfig, llm: LLMClient, db: Database,
+                 db_note: str = "a SQLite database"):
         self._cfg = cfg
         self._llm = llm
         self._db = db
-        self._system = BASELINE_PROMPT.format(schema=full_schema(db))
+        self._system = BASELINE_PROMPT.format(db_note=db_note, schema=full_schema(db))
 
     def run(self, question: str) -> AgentResult:
         try:
@@ -275,6 +276,27 @@ class B0Agent:
         )
 
 
+def benchmark_system_prompt(db: Database, db_id: str) -> str:
+    """System prompt for benchmark suites (Mini-Dev): same rules as the
+    default Olist prompt, but the database is named correctly."""
+    return (
+        f"You are a data analyst agent for the '{db_id}' SQLite database "
+        "(BIRD benchmark). Answer the user's business question using the "
+        "tools.\n\nRules:\n"
+        "1. Explore before querying: use list_tables and describe_table "
+        "to learn the schema before writing SQL.\n"
+        "2. Use run_sql for read-only queries. Data-changing SQL is "
+        "rejected there.\n"
+        "3. When you are done, reply with a concise plain-text answer. "
+        "End with the single SQL query in a ```sql fenced block that "
+        "directly computes the requested result — not an exploratory or "
+        "breakdown query. If the question asks for one number, the query "
+        "must return exactly that number.\n"
+        "4. If a tool returns an error, read the error and fix your "
+        "approach.\n"
+    )
+
+
 def make_agent_factory(
     cfg: AgentConfig,
     approve_all: bool = True,
@@ -293,7 +315,14 @@ def make_agent_factory(
             db = Database(cfg.db_path, cfg.scratch_path, cfg.row_limit, cfg.timeout_s)
             db.reset_scratch()
         if cfg.run_name == "b0":
-            return B0Agent(cfg, LLMClient(cfg), db)
+            if question.get("db_id"):
+                db_note = f"the '{question['db_id']}' SQLite database (BIRD benchmark)"
+            else:
+                db_note = (
+                    "the Olist marketplace database (SQLite, Brazilian "
+                    "e-commerce, 2017-2018)"
+                )
+            return B0Agent(cfg, LLMClient(cfg), db, db_note=db_note)
         tools = ToolRegistry(db, cfg)
         tracer = Tracer()
         stored = question.get("clarification_answer")
@@ -301,6 +330,9 @@ def make_agent_factory(
         def ask_user(clarification: str) -> str:
             return stored or "Use your best judgement and state your assumption."
 
+        system_prompt = None
+        if question.get("db_path") and question.get("db_id"):
+            system_prompt = benchmark_system_prompt(db, question["db_id"])
         return Agent(
             cfg,
             LLMClient(cfg),
@@ -308,6 +340,7 @@ def make_agent_factory(
             tracer,
             ask_user,
             approve=lambda sql: approve_all,
+            system_prompt=system_prompt,
         )
 
     return make_agent
