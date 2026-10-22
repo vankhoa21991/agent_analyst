@@ -18,6 +18,7 @@ def load_minidev(
     path: str | Path,
     limit: int | None = None,
     db_root: str | Path | None = None,
+    per_db: int | None = None,
 ) -> list[dict]:
     """Load Mini-Dev SQLite records as question dicts.
 
@@ -25,9 +26,21 @@ def load_minidev(
     `ambiguous`, `write`) plus `db_id`, `db_path`, `evidence`,
     `difficulty`. BIRD's `evidence` (external knowledge) is appended to
     the question, as the benchmark intends the model to use it.
+
+    `per_db` keeps at most N records per database (first N in file order),
+    for disclosed multi-DB subsets.
     """
     path = Path(path)
     records = json.loads(path.read_text())
+    if per_db is not None:
+        seen: dict[str, int] = {}
+        kept = []
+        for r in records:
+            n = seen.get(r["db_id"], 0)
+            if n < per_db:
+                kept.append(r)
+                seen[r["db_id"]] = n + 1
+        records = kept
     if limit is not None:
         records = records[:limit]
     if db_root is None:

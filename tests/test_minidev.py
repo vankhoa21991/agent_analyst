@@ -44,3 +44,12 @@ def test_load_minidev_explicit_db_root():
     assert questions[0]["db_path"] == str(
         FIXTURE_DIR / "testdb" / "testdb.sqlite"
     )
+
+
+def test_load_minidev_per_db_subset():
+    # fixture: 2 questions, both db_id=testdb
+    assert len(load_minidev(FIXTURE, per_db=1)) == 1
+    assert len(load_minidev(FIXTURE, per_db=2)) == 2
+    # per_db takes the first N per db_id, in file order
+    qs = load_minidev(FIXTURE, per_db=1)
+    assert qs[0]["id"] == "minidev_1"

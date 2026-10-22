@@ -43,11 +43,15 @@ def main() -> None:
     ap.add_argument("--config", required=True)
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--per-db", type=int, default=None,
+                    help="minidev only: keep at most N questions per database")
     args = ap.parse_args()
 
     cfg = load_config(args.config)
     if args.suite == "minidev":
-        questions = load_minidev(SUITES[args.suite], limit=args.limit)
+        questions = load_minidev(
+            SUITES[args.suite], limit=args.limit, per_db=args.per_db
+        )
     else:
         questions = load_questions(SUITES[args.suite], args.limit)
     print(
