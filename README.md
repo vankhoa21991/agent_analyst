@@ -73,6 +73,39 @@ chainlit run src/analyst/ui/app.py
 uv run python -m evals.run --suite custom --config configs/h4.yaml --repeats 3
 ```
 
+## Use from Codex (MCP)
+
+The analyst also runs as an MCP server, so the Codex desktop app can be the
+chat front end. Answers come back with an inline result table (scroll, click
+a header to sort). The server remembers the whole conversation until you
+start a new Codex chat, asks clarifying questions in the chat, and runs a
+write only after you click Approve (and only on the scratch copy).
+
+Register it in `~/.codex/config.toml` (replace the paths):
+
+```toml
+[mcp_servers.analyst]
+command = "/path/to/agent_analyst/.venv/bin/python"
+args = ["-m", "analyst.adapters.mcp"]
+cwd = "/path/to/agent_analyst"       # so .env (model + Langfuse keys) is found
+tool_timeout_sec = 300                # a run takes 10-60 s on the local model
+```
+
+Config for the server is `configs/mcp.yaml` (override with `ANALYST_MCP_CONFIG`).
+Sessions are stored in `data/sessions/`. Langfuse traces group by chat session.
+
+Caveats:
+
+- **Privacy:** the analysis runs on the local model, but whatever a tool
+  returns is visible to Codex's cloud model. That is fine for the public Olist
+  data; do not point this at private data.
+- **Write approval:** Codex showed no confirm dialog for a model-visible
+  approval tool, so a typed "yes" was the only gate and the model could type
+  it. `approve_write` is therefore app-only (hidden from the model); the
+  result panel's **Approve / Reject** buttons are the only way to run a write.
+  If the host does not let the page call tools, writes simply cannot be
+  approved. Not yet confirmed in Codex; see the design doc.
+
 ## What was left out, and why
 
 - **Postgres/pgvector RAG** → in-process TF-IDF (no Docker, no

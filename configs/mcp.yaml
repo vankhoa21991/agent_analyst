@@ -1,0 +1,18 @@
+# MCP adapter (Codex): H4 plus session memory settings. Sessions keep the whole
+# conversation, so old run_sql results are elided and budgets are larger.
+model: qwen3.8-27b
+base_url: http://localhost:8080/v1
+api_key: ${ANALYST_API_KEY}
+run_name: codex
+max_steps: 12
+max_total_tokens: 60000
+context_window: 100000
+db_path: data/olist.sqlite
+scratch_path: data/scratch.sqlite
+row_limit: 200
+timeout_s: 10
+rag: true
+rag_index: data/rag_index.json
+sql_checks: true
+clarify: true
+microcompact_keep: 3

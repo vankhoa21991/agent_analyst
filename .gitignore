@@ -22,3 +22,4 @@ data/rag_index.json
 # chainlit runtime
 tmp/
 .chainlit/
+data/sessions/

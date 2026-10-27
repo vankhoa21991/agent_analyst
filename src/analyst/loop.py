@@ -17,7 +17,7 @@ from .config import AgentConfig, load_config
 from .db import Database
 from .llm import LLMClient, LLMReply, ModelUnavailable
 from .tools import ToolRegistry, ToolResult
-from .tracing import Tracer
+from .tracing import Tracer, truncate
 
 SYSTEM_PROMPT = """You are a data analyst agent for the Olist marketplace \
 database (SQLite, Brazilian e-commerce, 2017-2018). Answer the user's \
@@ -50,7 +50,54 @@ def answer_sql(text: str | None) -> str | None:
         return None
     return blocks[-1].strip().rstrip(";").strip()
 
+def _trace_messages(messages: list[dict]) -> list[dict]:
+    """The conversation as shown in a trace: copies with long text cut."""
+    out = []
+    for m in messages:
+        copy = dict(m)
+        if isinstance(copy.get("content"), str):
+            copy["content"] = truncate(copy["content"])
+        out.append(copy)
+    return out
+
+
 _ROW_COUNT = re.compile(r"\((\d+) rows, ")
+
+INTERRUPTED_CALL = (
+    "Tool call interrupted before completing; re-issue it if still needed."
+)
+
+
+def heal_history(messages: list[dict]) -> list[dict]:
+    """Copy of messages in which every assistant tool call has a result.
+
+    A crashed or stopped turn can leave tool calls without results, and
+    the API then rejects every later prompt. Missing results are filled
+    with an "interrupted" tool message placed right after the results the
+    call did get."""
+    out: list[dict] = []
+    i = 0
+    while i < len(messages):
+        msg = dict(messages[i])
+        out.append(msg)
+        i += 1
+        if msg.get("role") != "assistant" or not msg.get("tool_calls"):
+            continue
+        answered: set[str] = set()
+        while i < len(messages) and messages[i].get("role") == "tool":
+            answered.add(messages[i].get("tool_call_id"))
+            out.append(dict(messages[i]))
+            i += 1
+        for call in msg["tool_calls"]:
+            if call["id"] not in answered:
+                out.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": call["id"],
+                        "content": INTERRUPTED_CALL,
+                    }
+                )
+    return out
 
 TRUNCATED_CALL = (
     "Tool call not executed: the response hit the output token limit, so "
@@ -78,6 +125,10 @@ class AgentResult:
     write_sql: str | None = None
     write_rows: int | None = None
     write_rejected: bool = False
+    # The conversation after this turn, without the system message and
+    # including this turn's user message. Pass it back as `history`.
+    messages: list[dict] = field(default_factory=list)
+    trace_id: str | None = None
 
 
 class Agent:
@@ -132,16 +183,36 @@ class Agent:
             )
         return len(old)
 
-    def run(self, question: str) -> AgentResult:
+    @staticmethod
+    def _history_sql_results(messages: list[dict]) -> list[dict]:
+        """Successful run_sql result messages already in `messages`, so
+        microcompaction also covers earlier turns."""
+        names = {
+            call["id"]: call["function"]["name"]
+            for m in messages
+            for call in (m.get("tool_calls") or [])
+        }
+        return [
+            m
+            for m in messages
+            if m.get("role") == "tool"
+            and names.get(m.get("tool_call_id")) == "run_sql"
+            and _ROW_COUNT.search(str(m.get("content")))
+        ]
+
+    def run(
+        self, question: str, history: list[dict] | None = None
+    ) -> AgentResult:
         try:
-            return self._run(question)
+            return self._run(question, history)
         finally:
             self._cancel.clear()
 
-    def _run(self, question: str) -> AgentResult:
+    def _run(self, question: str, history: list[dict] | None) -> AgentResult:
         cfg = self._cfg
         messages: list[dict] = [
             {"role": "system", "content": self._system_prompt()},
+            *heal_history(history or []),
             {"role": "user", "content": question},
         ]
         specs = self._tools.specs()
@@ -156,13 +227,17 @@ class Agent:
         write_rows: int | None = None
         last_sql: str | None = None
         write_rejected = False
-        sql_results: list[dict] = []  # run_sql tool messages, oldest first
+        # run_sql tool messages (earlier turns included), oldest first
+        sql_results = self._history_sql_results(messages)
         # Provider-reported context size after the latest reply, and how
         # many messages that number already covers. None = unknown.
         anchor_tokens: int | None = None
         anchor_len = 0
+        run_obs = None  # the trace's root observation, set below
 
         def finish(answer: str, stop_reason: str) -> AgentResult:
+            if run_obs is not None:
+                run_obs.end(answer, stop_reason)
             return AgentResult(
                 answer=answer,
                 # The SQL the agent presents as its answer wins over the
@@ -178,11 +253,14 @@ class Agent:
                 write_sql=write_sql,
                 write_rows=write_rows,
                 write_rejected=write_rejected,
+                messages=heal_history(messages[1:]),
+                trace_id=run_obs.trace_id if run_obs is not None else None,
             )
 
         run_metadata = {
             "run_name": cfg.run_name,
             "model": cfg.model,
+            "system_prompt": truncate(self._system_prompt(), 20000),
             "tools": [s["function"]["name"] for s in specs],
             "flags": {
                 "rag": cfg.rag,
@@ -191,7 +269,9 @@ class Agent:
                 "microcompact_keep": cfg.microcompact_keep,
             },
         }
-        with self._tracer.run("agent run", input=question, metadata=run_metadata):
+        with self._tracer.run(
+            "agent run", input=question, metadata=run_metadata
+        ) as run_obs:
             while steps < cfg.max_steps:
                 if self._cancel.is_set():
                     return finish("Stopped: cancelled by the user.", "cancelled")
@@ -217,11 +297,24 @@ class Agent:
                     )
                 steps += 1
                 try:
-                    with self._tracer.span(
-                        "llm call", step=steps,
-                        prompt_tokens=self._estimate_tokens(messages),
-                    ):
+                    with self._tracer.generation(
+                        steps, cfg.model, _trace_messages(messages[1:])
+                    ) as gen:
                         reply = self._llm.chat(messages, tools=specs)
+                        gen.end(
+                            {
+                                "content": reply.content,
+                                "tool_calls": [
+                                    {"name": tc.name, "arguments": tc.raw_arguments}
+                                    for tc in reply.tool_calls
+                                ],
+                            },
+                            {
+                                "input": reply.prompt_tokens,
+                                "output": reply.completion_tokens,
+                            },
+                            reply.finish_reason,
+                        )
                 except ModelUnavailable as e:
                     return finish(
                         f"Stopped: the model server is unavailable ({e}).",
@@ -259,26 +352,35 @@ class Agent:
                 truncated = reply.finish_reason == "length"
                 for tc in reply.tool_calls:
                     if truncated or self._cancel.is_set():
+                        skipped = (
+                            TRUNCATED_CALL
+                            if truncated
+                            else "Operation aborted: the run was cancelled."
+                        )
+                        with self._tracer.tool(tc.name, tc.raw_arguments) as tobs:
+                            tobs.end(skipped, False)
                         messages.append(
                             {
                                 "role": "tool",
                                 "tool_call_id": tc.id,
-                                "content": TRUNCATED_CALL
-                                if truncated
-                                else "Operation aborted: the run was cancelled.",
+                                "content": skipped,
                             }
                         )
                         continue
-                    if tc.name == "ask_user" and clarifications >= 1:
-                        result = ToolResult(
-                            "You already asked one clarifying question; "
-                            "you may ask only once per run. Proceed with "
-                            "your best judgement and state the assumption "
-                            "in your answer.",
-                            ok=False,
-                        )
-                    else:
-                        result = self._execute_tool_call(tc.name, tc.raw_arguments)
+                    with self._tracer.tool(tc.name, tc.raw_arguments) as tobs:
+                        if tc.name == "ask_user" and clarifications >= 1:
+                            result = ToolResult(
+                                "You already asked one clarifying question; "
+                                "you may ask only once per run. Proceed with "
+                                "your best judgement and state the assumption "
+                                "in your answer.",
+                                ok=False,
+                            )
+                        else:
+                            result = self._execute_tool_call(
+                                tc.name, tc.raw_arguments
+                            )
+                        tobs.end(result.text, result.ok)
                     if tc.name == "ask_user" and result.ok:
                         clarifications += 1
                     if tc.name == "run_sql":
@@ -298,23 +400,36 @@ class Agent:
                                     "sql_retry_limit",
                                 )
                     if result.needs_approval:
-                        verdict = self._approve(result.pending_sql or "")
-                        # A string is a rejection carrying its reason.
-                        if verdict and not isinstance(verdict, str):
-                            write_sql = result.pending_sql
-                            result = self._tools.run_approved_write(
-                                result.pending_sql
-                            )
-                            write_rows = result.rows
-                        else:
-                            write_rejected = True
-                            reason = verdict.strip() if isinstance(verdict, str) else ""
-                            result = ToolResult(
-                                "The user rejected the write; it was not "
-                                "executed. "
-                                + (f"Reason: {reason}. " if reason else "")
-                                + "Tell the user and do not retry."
-                            )
+                        with self._tracer.tool(
+                            "approval", result.pending_sql or ""
+                        ) as aobs:
+                            verdict = self._approve(result.pending_sql or "")
+                            # A string is a rejection carrying its reason.
+                            if verdict and not isinstance(verdict, str):
+                                write_sql = result.pending_sql
+                                result = self._tools.run_approved_write(
+                                    result.pending_sql
+                                )
+                                write_rows = result.rows
+                                aobs.end(f"approved: {result.text}", result.ok)
+                            else:
+                                write_rejected = True
+                                reason = (
+                                    verdict.strip()
+                                    if isinstance(verdict, str)
+                                    else ""
+                                )
+                                result = ToolResult(
+                                    "The user rejected the write; it was not "
+                                    "executed. "
+                                    + (f"Reason: {reason}. " if reason else "")
+                                    + "Tell the user and do not retry."
+                                )
+                                aobs.end(
+                                    "rejected"
+                                    + (f": {reason}" if reason else ""),
+                                    True,
+                                )
                     tool_msg = {
                         "role": "tool",
                         "tool_call_id": tc.id,

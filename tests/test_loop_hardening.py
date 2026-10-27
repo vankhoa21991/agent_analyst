@@ -293,6 +293,13 @@ def test_cancel_applies_to_one_run_only(tmp_path):
 
 # -- 7. trace metadata ----------------------------------------------------
 
+class _NullObs:
+    trace_id = None
+
+    def end(self, *args, **kwargs):
+        pass
+
+
 class RecordingTracer:
     def __init__(self):
         self.runs = []
@@ -300,7 +307,15 @@ class RecordingTracer:
     @contextmanager
     def run(self, name, input=None, metadata=None):
         self.runs.append({"name": name, "input": input, "metadata": metadata})
-        yield None
+        yield _NullObs()
+
+    @contextmanager
+    def generation(self, step, model, input):
+        yield _NullObs()
+
+    @contextmanager
+    def tool(self, name, arguments):
+        yield _NullObs()
 
     @contextmanager
     def span(self, name, **attrs):
