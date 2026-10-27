@@ -187,3 +187,30 @@ def test_buttons_only_in_needs_approval_state(browser, tmp_path):
     page, f = open_in_host(browser, tmp_path, finished(["a"], [[1]]))
     f.locator("tbody tr").first.wait_for()
     assert f.locator("#actions").is_hidden()
+
+
+MD_ANSWER = ("Orders by <total>:\n\n| s | n |\n|---|---|\n| a | 1 |\n\n"
+             "```sql\nSELECT 1\n```\n\nThere are **96 orders** in `orders`.")
+
+
+def test_answer_markdown_is_cleaned_not_shown_raw(browser, tmp_path):
+    page, f = open_in_host(browser, tmp_path, finished(["a"], [[1]], answer=MD_ANSWER))
+    f.locator("tbody tr").first.wait_for()
+    shown = f.locator("#answer").inner_text()
+    assert "```" not in shown and "|" not in shown and "**" not in shown and "`" not in shown
+    assert "Orders by <total>:" in shown and "There are 96 orders in orders." in shown
+    assert f.locator("#answer strong").inner_text() == "96 orders"
+    assert f.locator("#answer b, #answer script, #answer total").count() == 0
+
+
+def test_numbers_get_thousands_separators(browser, tmp_path):
+    page, f = open_in_host(browser, tmp_path, finished(["n", "x", "id"], [[96478, 13591643.7, "00123"]]))
+    f.locator("tbody tr").first.wait_for()
+    assert first_cells(f) == ["96,478", "13,591,643.70", "00123"]
+
+
+def test_numeric_headers_align_with_numbers(browser, tmp_path):
+    page, f = open_in_host(browser, tmp_path, finished(["name", "n"], [["a", 1], [None, 2]]))
+    f.locator("tbody tr").first.wait_for()
+    align = lambda i: f.locator("th").nth(i).evaluate("e => getComputedStyle(e).textAlign")
+    assert align(0) == "left" and align(1) == "right"

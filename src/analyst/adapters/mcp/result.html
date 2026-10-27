@@ -19,6 +19,8 @@
   td.num { text-align:right; font-variant-numeric:tabular-nums; }
   th { position:sticky; top:0; background:var(--head); cursor:pointer; user-select:none; }
   th.sorted { color:var(--accent); }
+  th.num { text-align:right; }
+  #answer code { font:12px ui-monospace,monospace; background:var(--head); padding:0 3px; border-radius:3px; }
   #actions { padding:0 10px 8px; }
   #actions button { padding:4px 14px; font:inherit; color:var(--fg); background:var(--head); border:1px solid var(--line); border-radius:4px; cursor:pointer; }
   #actions button:disabled { opacity:.5; cursor:default; }
@@ -42,12 +44,24 @@ const request = (method, params) => new Promise(res => {
 function applyTheme(ctx) { if (ctx && ctx.theme) document.documentElement.dataset.theme = ctx.theme; }
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+// The table and SQL box already show the query and its rows, so the answer
+// text drops fenced code and markdown tables, and keeps bold / inline code.
+function prose(text) {
+  const clean = String(text || "").replace(/```[\s\S]*?```/g, "")
+    .split("\n").filter(l => !/^\s*\|/.test(l)).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return esc(clean).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+const fmt = v => typeof v !== "number" ? esc(v)
+  : Number.isInteger(v) ? v.toLocaleString("en-US")
+  : v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 function show(id, text) { const el = $(id); el.textContent = text || ""; el.hidden = !text; }
 
 let columns = [], rows = [], sortCol = -1, sortDir = 1, currentRun = null;
 function render() {
+  const numeric = columns.map((_, i) => rows.some(r => r[i] !== null && r[i] !== undefined) &&
+    rows.every(r => r[i] === null || r[i] === undefined || typeof r[i] === "number"));
   $("head").innerHTML = "<tr>" + columns.map((c, i) =>
-    `<th data-i="${i}" class="${i === sortCol ? "sorted" : ""}">${esc(c)}${i === sortCol ? (sortDir > 0 ? " ▲" : " ▼") : ""}</th>`).join("") + "</tr>";
+    `<th data-i="${i}" class="${(i === sortCol ? "sorted " : "") + (numeric[i] ? "num" : "")}">${esc(c)}${i === sortCol ? (sortDir > 0 ? " ▲" : " ▼") : ""}</th>`).join("") + "</tr>";
   const view = rows.slice();
   if (sortCol >= 0) view.sort((a, b) => {
     const x = a[sortCol], y = b[sortCol];
@@ -57,7 +71,7 @@ function render() {
     return (typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y))) * sortDir;
   });
   $("body").innerHTML = view.map(r => "<tr>" + r.map(v =>
-    `<td class="${typeof v === "number" ? "num" : ""}">${v === null || v === undefined ? "" : esc(v)}</td>`).join("") + "</tr>").join("");
+    `<td class="${typeof v === "number" ? "num" : ""}">${v === null || v === undefined ? "" : fmt(v)}</td>`).join("") + "</tr>").join("");
   $("count").textContent = `${rows.length} row${rows.length === 1 ? "" : "s"}`;
 }
 $("head").addEventListener("click", e => {
@@ -77,7 +91,7 @@ function showResult(r) {
   }
   else if (r.status === "error") show("state", r.message || "Something went wrong.");
   else {
-    show("answer", r.answer);
+    const a = $("answer"); a.innerHTML = prose(r.answer); a.hidden = !a.textContent.trim();
     if (r.sql) { $("sql").textContent = r.sql; $("sqlbox").hidden = false; }
     if (r.rows_truncated) show("notice", `Result capped at ${rows.length} rows; the query returns more.`);
     else if (r.write) show("notice", "Write: " + r.write);
