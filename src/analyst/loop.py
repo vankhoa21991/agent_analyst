@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import threading
 from dataclasses import dataclass, field
 from typing import Callable
 
@@ -49,6 +50,14 @@ def answer_sql(text: str | None) -> str | None:
         return None
     return blocks[-1].strip().rstrip(";").strip()
 
+_ROW_COUNT = re.compile(r"\((\d+) rows, ")
+
+TRUNCATED_CALL = (
+    "Tool call not executed: the response hit the output token limit, so "
+    "its arguments may be truncated. Re-issue the tool call with complete "
+    "arguments."
+)
+
 CLARIFY_RULE = """6. If the question has more than one reasonable meaning \
 (for example an undefined business term), call ask_user exactly once before \
 running any SQL, then use the confirmed meaning.
@@ -63,11 +72,12 @@ class AgentResult:
     prompt_tokens: int
     completion_tokens: int
     clarifications: int
-    stop_reason: str  # answered | max_steps | token_budget | model_unavailable | context_overflow | sql_retry_limit
+    stop_reason: str  # answered | max_steps | token_budget | model_unavailable | context_overflow | sql_retry_limit | cancelled
     sql_runs: int = 0
     sql_errors: int = 0
     write_sql: str | None = None
     write_rows: int | None = None
+    write_rejected: bool = False
 
 
 class Agent:
@@ -78,7 +88,7 @@ class Agent:
         tools: ToolRegistry,
         tracer: Tracer,
         ask_user: Callable[[str], str],
-        approve: Callable[[str], bool],
+        approve: Callable[[str], bool | str],
         system_prompt: str | None = None,
     ):
         self._cfg = cfg
@@ -88,7 +98,13 @@ class Agent:
         self._ask_user = ask_user
         self._approve = approve
         self._system_override = system_prompt
+        self._cancel = threading.Event()
         tools.ask_user = ask_user
+
+    def cancel(self) -> None:
+        """Ask the current run to stop at the next safe point (thread-safe).
+        Applies to one run; the flag clears when that run ends."""
+        self._cancel.set()
 
     def _system_prompt(self) -> str:
         if self._system_override is not None:
@@ -99,7 +115,30 @@ class Agent:
     def _estimate_tokens(messages: list[dict]) -> int:
         return sum(len(str(m.get("content") or "")) for m in messages) // 3
 
+    @staticmethod
+    def _microcompact(sql_results: list[dict], keep: int) -> int:
+        """Replace all but the newest `keep` run_sql result bodies with a
+        one-line marker. Returns how many were elided."""
+        if keep <= 0:
+            return 0
+        old = sql_results[:-keep]
+        del sql_results[:-keep]
+        for msg in old:
+            m = _ROW_COUNT.search(msg["content"])
+            rows = f": {m.group(1)} rows" if m else ""
+            msg["content"] = (
+                f"(earlier run_sql result elided{rows}; "
+                "re-run the query if you need it)"
+            )
+        return len(old)
+
     def run(self, question: str) -> AgentResult:
+        try:
+            return self._run(question)
+        finally:
+            self._cancel.clear()
+
+    def _run(self, question: str) -> AgentResult:
         cfg = self._cfg
         messages: list[dict] = [
             {"role": "system", "content": self._system_prompt()},
@@ -116,6 +155,12 @@ class Agent:
         write_sql: str | None = None
         write_rows: int | None = None
         last_sql: str | None = None
+        write_rejected = False
+        sql_results: list[dict] = []  # run_sql tool messages, oldest first
+        # Provider-reported context size after the latest reply, and how
+        # many messages that number already covers. None = unknown.
+        anchor_tokens: int | None = None
+        anchor_len = 0
 
         def finish(answer: str, stop_reason: str) -> AgentResult:
             return AgentResult(
@@ -132,11 +177,33 @@ class Agent:
                 sql_errors=sql_errors,
                 write_sql=write_sql,
                 write_rows=write_rows,
+                write_rejected=write_rejected,
             )
 
-        with self._tracer.run("agent run", input=question):
+        run_metadata = {
+            "run_name": cfg.run_name,
+            "model": cfg.model,
+            "tools": [s["function"]["name"] for s in specs],
+            "flags": {
+                "rag": cfg.rag,
+                "sql_checks": cfg.sql_checks,
+                "clarify": cfg.clarify,
+                "microcompact_keep": cfg.microcompact_keep,
+            },
+        }
+        with self._tracer.run("agent run", input=question, metadata=run_metadata):
             while steps < cfg.max_steps:
-                if self._estimate_tokens(messages) > cfg.context_window:
+                if self._cancel.is_set():
+                    return finish("Stopped: cancelled by the user.", "cancelled")
+                if self._microcompact(sql_results, cfg.microcompact_keep):
+                    anchor_tokens = None  # earlier messages shrank
+                if anchor_tokens is None:
+                    context_tokens = self._estimate_tokens(messages)
+                else:
+                    context_tokens = anchor_tokens + self._estimate_tokens(
+                        messages[anchor_len:]
+                    )
+                if context_tokens > cfg.context_window:
                     return finish(
                         "Stopped: the conversation exceeded the context "
                         f"window ({cfg.context_window} tokens estimated).",
@@ -179,11 +246,29 @@ class Agent:
                         for tc in reply.tool_calls
                     ]
                 messages.append(assistant_msg)
+                anchor_tokens = (
+                    reply.prompt_tokens + reply.completion_tokens
+                    if reply.prompt_tokens > 0
+                    else None
+                )
+                anchor_len = len(messages)
 
                 if not reply.tool_calls:
                     return finish(reply.content or "", "answered")
 
+                truncated = reply.finish_reason == "length"
                 for tc in reply.tool_calls:
+                    if truncated or self._cancel.is_set():
+                        messages.append(
+                            {
+                                "role": "tool",
+                                "tool_call_id": tc.id,
+                                "content": TRUNCATED_CALL
+                                if truncated
+                                else "Operation aborted: the run was cancelled.",
+                            }
+                        )
+                        continue
                     if tc.name == "ask_user" and clarifications >= 1:
                         result = ToolResult(
                             "You already asked one clarifying question; "
@@ -213,25 +298,31 @@ class Agent:
                                     "sql_retry_limit",
                                 )
                     if result.needs_approval:
-                        approved = self._approve(result.pending_sql or "")
-                        if approved:
+                        verdict = self._approve(result.pending_sql or "")
+                        # A string is a rejection carrying its reason.
+                        if verdict and not isinstance(verdict, str):
                             write_sql = result.pending_sql
                             result = self._tools.run_approved_write(
                                 result.pending_sql
                             )
                             write_rows = result.rows
                         else:
+                            write_rejected = True
+                            reason = verdict.strip() if isinstance(verdict, str) else ""
                             result = ToolResult(
                                 "The user rejected the write; it was not "
-                                "executed. Tell the user and do not retry."
+                                "executed. "
+                                + (f"Reason: {reason}. " if reason else "")
+                                + "Tell the user and do not retry."
                             )
-                    messages.append(
-                        {
-                            "role": "tool",
-                            "tool_call_id": tc.id,
-                            "content": result.text,
-                        }
-                    )
+                    tool_msg = {
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": result.text,
+                    }
+                    messages.append(tool_msg)
+                    if tc.name == "run_sql" and result.ok:
+                        sql_results.append(tool_msg)
             return finish(
                 f"Stopped after {cfg.max_steps} steps without a final answer.",
                 "max_steps",

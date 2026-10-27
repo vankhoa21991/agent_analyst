@@ -39,7 +39,7 @@ class Tracer:
         return self._lf is not None
 
     @contextmanager
-    def run(self, name: str, input=None):
+    def run(self, name: str, input=None, metadata: dict | None = None):
         """Root span for one agent run. Nested spans attach to it."""
         if self._lf is None:
             yield None
@@ -48,7 +48,11 @@ class Tracer:
             name=name,
             as_type="span",
             input=input,
-            metadata={**self._metadata, "session_id": self._session_id},
+            metadata={
+                **self._metadata,
+                "session_id": self._session_id,
+                **(metadata or {}),
+            },
         ) as obs:
             yield obs
 

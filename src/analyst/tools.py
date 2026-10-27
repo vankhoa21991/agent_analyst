@@ -44,6 +44,21 @@ _FLAG_NOTES = {
 }
 
 
+def _check_arguments(schema: dict, arguments: dict) -> str | None:
+    """Return a description of the first schema violation, or None."""
+    for key in schema.get("required", []):
+        if key not in arguments:
+            return f"missing required argument '{key}'"
+    for key, spec in schema.get("properties", {}).items():
+        if (
+            key in arguments
+            and spec.get("type") == "string"
+            and not isinstance(arguments[key], str)
+        ):
+            return f"argument '{key}' must be a string"
+    return None
+
+
 class ToolRegistry:
     def __init__(
         self,
@@ -154,6 +169,18 @@ class ToolRegistry:
     # -- dispatch -------------------------------------------------------------
 
     def call(self, name: str, arguments: dict) -> ToolResult:
+        schemas = {
+            s["function"]["name"]: s["function"]["parameters"]
+            for s in self.specs()
+        }
+        if name in schemas:
+            problem = _check_arguments(schemas[name], arguments)
+            if problem is not None:
+                return ToolResult(
+                    f"Invalid arguments for {name}: {problem}. "
+                    "Retry the tool call with valid arguments.",
+                    ok=False,
+                )
         try:
             if name == "list_tables":
                 return self._list_tables()

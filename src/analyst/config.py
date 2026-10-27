@@ -58,6 +58,9 @@ class AgentConfig:
     rag_index: str = ""
     sql_checks: bool = False
     clarify: bool = False
+    # Keep only the newest N successful run_sql results verbatim; older ones
+    # are replaced by a one-line marker. 0 disables (the default).
+    microcompact_keep: int = 0
     run_name: str = "h1"
 
 

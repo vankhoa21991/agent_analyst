@@ -5,7 +5,7 @@
 # docs/adr/0002-rag-without-postgres.md), so there is no agent Postgres.
 #
 #   docker compose up -d          # everything
-#   Langfuse UI: http://localhost:3000  (analyst@example.com / analyst)
+#   Langfuse UI: http://localhost:3000  (analyst@example.com / analyst123)
 #   Analyst UI:  http://localhost:8000
 #
 # The project is auto-created on first boot with the dev keys below; the
@@ -49,7 +49,8 @@ services:
       NEXTAUTH_SECRET: analyst-local-dev-only
       DATABASE_URL: postgresql://postgres:postgres@langfuse-postgres:5432/postgres
       SALT: analyst-local-dev-salt
-      ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+      # quoted: unquoted, YAML parses 64 zeros as the integer 0
+      ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
       TELEMETRY_ENABLED: "false"
       CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
       CLICKHOUSE_URL: http://clickhouse:8123
@@ -60,12 +61,14 @@ services:
       REDIS_PORT: "6379"
       REDIS_AUTH: analyst-local-dev-redis
       LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: us-east-1  # MinIO ignores it; the S3 client requires one
       LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: minio
       LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: miniosecret
       LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://minio:9000
       LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
       LANGFUSE_S3_EVENT_UPLOAD_PREFIX: events/
       LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_MEDIA_UPLOAD_REGION: us-east-1  # MinIO ignores it; the S3 client requires one
       LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: minio
       LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: miniosecret
       LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: http://localhost:9090
@@ -81,7 +84,8 @@ services:
       LANGFUSE_INIT_PROJECT_SECRET_KEY: sk-lf-analyst-dev
       LANGFUSE_INIT_USER_EMAIL: analyst@example.com
       LANGFUSE_INIT_USER_NAME: Analyst
-      LANGFUSE_INIT_USER_PASSWORD: analyst
+      # Langfuse requires at least 8 characters
+      LANGFUSE_INIT_USER_PASSWORD: analyst123
 
   langfuse-worker:
     image: docker.langfuse.com/langfuse/langfuse-worker:4

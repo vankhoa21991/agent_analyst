@@ -21,7 +21,7 @@ from chainlit.message import AskActionMessage, AskUserMessage, Message
 from analyst.config import load_config
 from analyst.db import Database
 from analyst.llm import LLMClient
-from analyst.loop import Agent
+from analyst.loop import Agent, answer_sql
 from analyst.tools import ToolRegistry
 from analyst.tracing import Tracer
 
@@ -90,23 +90,45 @@ def build_agent(config_path: str = CONFIG_PATH) -> Agent:
     )
 
 
+def write_status_line(res) -> str:
+    """The chat line describing what happened to a proposed write."""
+    if res.write_rows is not None:
+        return (
+            "\n\n✅ Write executed on the scratch database: "
+            f"{res.write_rows} row(s) changed."
+        )
+    if res.write_rejected:
+        return "\n\n⚠️ Write was not approved; nothing was executed."
+    if res.write_sql:
+        return "\n\n❌ The approved write failed; nothing was changed."
+    return ""
+
+
+def compose_reply(res) -> str:
+    """The chat text for a finished run. The model is told to end its
+    answer with the SQL block, so only add one when it did not."""
+    content = res.answer or ""
+    if res.sql and answer_sql(content) is None:
+        content += f"\n\n```sql\n{res.sql}\n```"
+    content += write_status_line(res)
+    if res.stop_reason != "answered":
+        content += f"\n\n_(stopped: {res.stop_reason})_"
+    return content
+
+
 @cl.on_message
 async def on_message(message: str) -> None:
     agent = build_agent()
+    cl.user_session.set("agent", agent)
     await Message(content="Working…", author="analyst").send()
     res = await asyncio.to_thread(agent.run, message.content)
+    await Message(content=compose_reply(res), author="analyst").send()
 
-    content = res.answer or ""
-    if res.sql:
-        content += f"\n\n```sql\n{res.sql}\n```"
-    if res.write_sql:
-        if res.write_rows is not None:
-            content += (
-                f"\n\n✅ Write executed on the scratch database: "
-                f"{res.write_rows} row(s) changed."
-            )
-        else:
-            content += "\n\n⚠️ Write was not approved; nothing was executed."
-    if res.stop_reason != "answered":
-        content += f"\n\n_(stopped: {res.stop_reason})_"
-    await Message(content=content, author="analyst").send()
+
+@cl.on_stop
+def on_stop() -> None:
+    """The user pressed Stop: ask the running agent to stop at its next
+    safe point (between steps; a pending prompt must still be answered)."""
+    agent = cl.user_session.get("agent")
+    if agent is not None:
+        agent.cancel()

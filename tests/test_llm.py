@@ -26,10 +26,12 @@ def make_cfg(**overrides):
     return AgentConfig(**base)
 
 
-def fake_client(message, prompt_tokens=11, completion_tokens=7):
+def fake_client(message, prompt_tokens=11, completion_tokens=7,
+                finish_reason="stop"):
     completions = SimpleNamespace(
         create=lambda **kw: SimpleNamespace(
-            choices=[SimpleNamespace(message=message)],
+            choices=[SimpleNamespace(message=message,
+                                     finish_reason=finish_reason)],
             usage=SimpleNamespace(
                 prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
             ),
@@ -78,3 +80,14 @@ def test_server_down_raises_model_unavailable():
     client = LLMClient(make_cfg(base_url="http://127.0.0.1:1/v1"))
     with pytest.raises(ModelUnavailable):
         client.chat([{"role": "user", "content": "hi"}])
+
+
+def test_chat_reports_finish_reason():
+    message = SimpleNamespace(
+        role="assistant", content=None, reasoning_content=None, tool_calls=None
+    )
+    client = LLMClient(
+        make_cfg(), client=fake_client(message, finish_reason="length")
+    )
+    reply = client.chat([{"role": "user", "content": "hi"}])
+    assert reply.finish_reason == "length"

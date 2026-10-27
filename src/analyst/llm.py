@@ -30,6 +30,9 @@ class LLMReply:
     completion_tokens: int = 0
     seconds: float = 0.0
     reasoning: str | None = None
+    # "stop" | "tool_calls" | "length" | ...; "length" means the output hit
+    # the token limit and any tool call in it may have truncated arguments.
+    finish_reason: str | None = None
 
 
 class LLMClient:
@@ -68,4 +71,5 @@ class LLMClient:
             completion_tokens=usage.completion_tokens if usage else 0,
             seconds=seconds,
             reasoning=getattr(msg, "reasoning_content", None),
+            finish_reason=getattr(resp.choices[0], "finish_reason", None),
         )
